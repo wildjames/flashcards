@@ -20,7 +20,7 @@ run-backend-dev:
 	cd $(BACKEND_DIR) && \
 		export FLASK_APP=app.py; \
 		export FLASK_ENV=development; \
-		$(VENV_DIR)/bin/flask run --host=0.0.0.0
+		$(VENV_DIR)/bin/flask --debug run --host=0.0.0.0
 
 lint-backend:
 	cd $(BACKEND_DIR) && \
