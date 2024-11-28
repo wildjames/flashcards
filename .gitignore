@@ -1,0 +1,59 @@
+# General
+.DS_Store
+*.log
+*.swp
+*~
+
+# Environment Variables
+.env
+.env.*
+
+# Python
+__pycache__/
+
+# Virtual Environments
+venv/
+
+# Python Distribution / Packaging
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+sdist/
+develop-eggs/
+.installed.cfg
+
+# Flask Specific
+instance/
+*.sqlite3
+*.db
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+frontend/node_modules/
+
+# React Build Output
+frontend/build/
+frontend/dist/
+frontend/.cache/
+
+
+# MacOS Files
+.DS_Store
+
+# Windows Files
+Thumbs.db
+ehthumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary Files
+tmp/
+temp/
