@@ -13,10 +13,10 @@ user_group = db.Table('user_group',
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)  # Primary key
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
-    password_salt = db.Column(db.String(128), nullable=False)
+    username = db.Column(db.String(256), unique=True, nullable=False)
+    email = db.Column(db.String(256), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    password_salt = db.Column(db.String(256), nullable=False)
     time_created = db.Column(db.DateTime, default=timezone.utc)
     time_updated = db.Column(db.DateTime, default=timezone.utc, onupdate=timezone.utc)
 
