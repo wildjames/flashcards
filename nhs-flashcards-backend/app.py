@@ -1,7 +1,12 @@
 # Imports for setting up the app
 import os
-from flask import Flask, request, jsonify
-from datetime import timedelta, datetime
+from datetime import timedelta
+
+from flask import Flask
+from flask_jwt_extended import (
+    JWTManager
+)
+from flask_cors import CORS
 
 
 app = Flask(__name__)
@@ -14,18 +19,17 @@ app.config['JWT_REFRESH_TOKEN_EXPIRES'] = os.getenv("JWT_REFRESH_TOKEN_EXPIRES",
 if not app.config['JWT_SECRET_KEY']:
     raise ValueError("JWT_SECRET_KEY environment variable not set")
 
-
-# Further imports
-from flask_jwt_extended import (
-    JWTManager,
-    jwt_required, get_jwt_identity
-)
-from flask_migrate import Migrate
-
-from database.db_interface import db, DATABASE_URI
-from database.db_types import User, Card, Group
-
 jwt = JWTManager(app)
+
+
+# CORS needs to allow traffic from the frontend, which is running on localhost:3000
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+
+
+# Further imports for database setup
+from flask_migrate import Migrate
+from database.db_interface import db, DATABASE_URI
+
 
 # Configuration for SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URI

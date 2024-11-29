@@ -2,6 +2,7 @@ alembic==1.14.0
 blinker==1.9.0
 click==8.1.7
 Flask==3.1.0
+Flask-Cors==5.0.0
 Flask-JWT-Extended==4.7.1
 Flask-Migrate==4.0.7
 Flask-SQLAlchemy==3.1.1
@@ -17,6 +18,8 @@ PyMySQL==1.1.1
 python-dotenv==1.0.1
 SQLAlchemy==2.0.36
 tomli==2.2.1
+types-colorama==0.4.15.20240311
+types-Flask-Cors==5.0.0.20240902
 types-Flask-Migrate==4.0.0.20240311
 typing_extensions==4.12.2
 Werkzeug==3.1.3

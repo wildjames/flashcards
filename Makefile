@@ -42,7 +42,7 @@ clean-backend:
 # Frontend commands
 install-frontend:
 	cd $(FRONTEND_DIR) && \
-		npm install
+		npm install --verbose
 
 run-frontend-dev:
 	cd $(FRONTEND_DIR) && \
