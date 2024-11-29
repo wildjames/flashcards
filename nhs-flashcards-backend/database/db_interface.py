@@ -1,4 +1,3 @@
-from flask import Flask
 from .db_types import db
 import os
 

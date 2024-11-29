@@ -13,12 +13,12 @@ user_group = db.Table('user_group',
 
 class User(db.Model):
     __tablename__ = 'user'
-    id = db.Column(db.UUID, primary_key=True, default=lambda: uuid.uuid4())
+    id = db.Column(db.UUID, primary_key=True, default=uuid.uuid4)
     username = db.Column(db.String(256), unique=True, nullable=False)
     email = db.Column(db.String(256), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    time_created = db.Column(db.DateTime, default=datetime.now().isoformat)
-    time_updated = db.Column(db.DateTime, default=datetime.now().isoformat, onupdate=datetime.now().isoformat)
+    time_created = db.Column(db.DateTime, default=lambda: datetime.now().isoformat())
+    time_updated = db.Column(db.DateTime, default=lambda: datetime.now().isoformat(), onupdate=lambda: datetime.now().isoformat())
 
     # Relationships
     cards_created = db.relationship('Card', backref='creator', lazy=True, foreign_keys='Card.creator_id')
@@ -28,24 +28,25 @@ class User(db.Model):
 
 class Group(db.Model):
     __tablename__ = 'group'
-    group_id = db.Column(db.UUID, primary_key=True, default=lambda: uuid.uuid4())  # Primary key
+    group_id = db.Column(db.UUID, primary_key=True, default=uuid.uuid4)
     creator_id = db.Column(db.UUID, db.ForeignKey('user.id'), nullable=False)
-    time_created = db.Column(db.DateTime, default=datetime.now().isoformat)
-    time_updated = db.Column(db.DateTime, default=datetime.now().isoformat, onupdate=datetime.now().isoformat)
+    time_created = db.Column(db.DateTime, default=lambda: datetime.now().isoformat())
+    time_updated = db.Column(db.DateTime, default=lambda: datetime.now().isoformat(), onupdate=lambda: datetime.now().isoformat())
+    group_name = db.Column(db.String(256), nullable=False)
 
     # Relationships
     cards = db.relationship('Card', backref='group', lazy=True)
 
 class Card(db.Model):
     __tablename__ = 'card'
-    card_id = db.Column(db.UUID, primary_key=True, default=lambda: uuid.uuid4())  # Primary key
+    card_id = db.Column(db.UUID, primary_key=True, default=uuid.uuid4)
     question = db.Column(db.Text, nullable=False)
     correct_answer = db.Column(db.Text, nullable=False)
     incorrect_answer = db.Column(db.Text)
     group_id = db.Column(db.UUID, db.ForeignKey('group.group_id'), nullable=False)
     creator_id = db.Column(db.UUID, db.ForeignKey('user.id'), nullable=False)
-    time_created = db.Column(db.DateTime, default=datetime.now().isoformat)
-    time_updated = db.Column(db.DateTime, default=datetime.now().isoformat, onupdate=datetime.now().isoformat)
+    time_created = db.Column(db.DateTime, default=lambda: datetime.now().isoformat())
+    time_updated = db.Column(db.DateTime, default=lambda: datetime.now().isoformat(), onupdate=lambda: datetime.now().isoformat())
     updated_by_id = db.Column(db.UUID, db.ForeignKey('user.id'))
 
     # Relationships
@@ -54,7 +55,7 @@ class Card(db.Model):
 
 class UserCardData(db.Model):
     __tablename__ = 'user_card_data'
-    user_id = db.Column(db.UUID, db.ForeignKey('user.id'), primary_key=True, default=lambda: uuid.uuid4())
+    user_id = db.Column(db.UUID, db.ForeignKey('user.id'), primary_key=True, default=uuid.uuid4)
     card_id = db.Column(db.UUID, db.ForeignKey('card.card_id'), primary_key=True)
     times_answered = db.Column(db.UUID, default=0)
     times_answered_incorrectly = db.Column(db.UUID, default=0)
