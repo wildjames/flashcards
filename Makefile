@@ -10,6 +10,11 @@ PYTHON := python3
 PIP := $(VENV_DIR)/bin/pip
 
 # Backend commands
+migrate:
+	cd $(BACKEND_DIR) && \
+		$(VENV_DIR)/bin/flask db migrate && \
+		$(VENV_DIR)/bin/flask db upgrade
+
 install-backend:
 	cd $(BACKEND_DIR) && \
 		$(PYTHON) -m venv venv && \

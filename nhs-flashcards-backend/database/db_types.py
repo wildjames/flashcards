@@ -1,24 +1,24 @@
 from flask_sqlalchemy import SQLAlchemy
-from datetime import timezone
+from datetime import datetime
+import uuid
 
 # Initialize the SQLAlchemy object without an app
 db = SQLAlchemy()
 
 # Association table for the many-to-many relationship between Users and Groups
 user_group = db.Table('user_group',
-    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
-    db.Column('group_id', db.Integer, db.ForeignKey('group.group_id'), primary_key=True)
+    db.Column('user_id', db.UUID, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('group_id', db.UUID, db.ForeignKey('group.group_id'), primary_key=True)
 )
 
 class User(db.Model):
     __tablename__ = 'user'
-    id = db.Column(db.Integer, primary_key=True)  # Primary key
+    id = db.Column(db.UUID, primary_key=True, default=lambda: uuid.uuid4())
     username = db.Column(db.String(256), unique=True, nullable=False)
     email = db.Column(db.String(256), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    password_salt = db.Column(db.String(256), nullable=False)
-    time_created = db.Column(db.DateTime, default=timezone.utc)
-    time_updated = db.Column(db.DateTime, default=timezone.utc, onupdate=timezone.utc)
+    time_created = db.Column(db.DateTime, default=datetime.now().isoformat)
+    time_updated = db.Column(db.DateTime, default=datetime.now().isoformat, onupdate=datetime.now().isoformat)
 
     # Relationships
     cards_created = db.relationship('Card', backref='creator', lazy=True, foreign_keys='Card.creator_id')
@@ -28,25 +28,25 @@ class User(db.Model):
 
 class Group(db.Model):
     __tablename__ = 'group'
-    group_id = db.Column(db.Integer, primary_key=True)  # Primary key
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    time_created = db.Column(db.DateTime, default=timezone.utc)
-    time_updated = db.Column(db.DateTime, default=timezone.utc, onupdate=timezone.utc)
+    group_id = db.Column(db.UUID, primary_key=True, default=lambda: uuid.uuid4())  # Primary key
+    creator_id = db.Column(db.UUID, db.ForeignKey('user.id'), nullable=False)
+    time_created = db.Column(db.DateTime, default=datetime.now().isoformat)
+    time_updated = db.Column(db.DateTime, default=datetime.now().isoformat, onupdate=datetime.now().isoformat)
 
     # Relationships
     cards = db.relationship('Card', backref='group', lazy=True)
 
 class Card(db.Model):
     __tablename__ = 'card'
-    card_id = db.Column(db.Integer, primary_key=True)  # Primary key
+    card_id = db.Column(db.UUID, primary_key=True, default=lambda: uuid.uuid4())  # Primary key
     question = db.Column(db.Text, nullable=False)
     correct_answer = db.Column(db.Text, nullable=False)
     incorrect_answer = db.Column(db.Text)
-    group_id = db.Column(db.Integer, db.ForeignKey('group.group_id'), nullable=False)
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    time_created = db.Column(db.DateTime, default=timezone.utc)
-    time_updated = db.Column(db.DateTime, default=timezone.utc, onupdate=timezone.utc)
-    updated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    group_id = db.Column(db.UUID, db.ForeignKey('group.group_id'), nullable=False)
+    creator_id = db.Column(db.UUID, db.ForeignKey('user.id'), nullable=False)
+    time_created = db.Column(db.DateTime, default=datetime.now().isoformat)
+    time_updated = db.Column(db.DateTime, default=datetime.now().isoformat, onupdate=datetime.now().isoformat)
+    updated_by_id = db.Column(db.UUID, db.ForeignKey('user.id'))
 
     # Relationships
     updated_by = db.relationship('User', foreign_keys=[updated_by_id], backref='cards_updated')
@@ -54,8 +54,8 @@ class Card(db.Model):
 
 class UserCardData(db.Model):
     __tablename__ = 'user_card_data'
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
-    card_id = db.Column(db.Integer, db.ForeignKey('card.card_id'), primary_key=True)
-    times_answered = db.Column(db.Integer, default=0)
-    times_answered_incorrectly = db.Column(db.Integer, default=0)
+    user_id = db.Column(db.UUID, db.ForeignKey('user.id'), primary_key=True, default=lambda: uuid.uuid4())
+    card_id = db.Column(db.UUID, db.ForeignKey('card.card_id'), primary_key=True)
+    times_answered = db.Column(db.UUID, default=0)
+    times_answered_incorrectly = db.Column(db.UUID, default=0)
     last_seen = db.Column(db.DateTime)

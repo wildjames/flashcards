@@ -18,7 +18,8 @@
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "ms-azuretools.vscode-docker",
-        "ms-vscode.makefile-tools"
+        "ms-vscode.makefile-tools",
+        "ms-python.mypy-type-checker"
       ]
     }
   },
