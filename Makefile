@@ -10,6 +10,10 @@ PYTHON := python3
 PIP := $(VENV_DIR)/bin/pip
 
 # Backend commands
+create-db:
+	cd $(BACKEND_DIR) && \
+		$(VENV_DIR)/bin/flask db init
+
 migrate:
 	cd $(BACKEND_DIR) && \
 		$(VENV_DIR)/bin/flask db migrate && \
