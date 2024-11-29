@@ -71,6 +71,12 @@ app.add_url_rule("/groups/<uuid:group_id>", view_func=group_endpoints.delete_gro
 app.add_url_rule("/groups/<uuid:group_id>/join", view_func=group_endpoints.add_user_to_group, methods=['POST'])
 
 
+### DEV ENDPOINTS ###
+import routes.dev_endpoints as dev_endpoints
+
+app.add_url_rule("/dev/users", view_func=dev_endpoints.get_usernames, methods=['GET'])
+
+
 @app.route('/')
 def index():
     return "Hello, World!"

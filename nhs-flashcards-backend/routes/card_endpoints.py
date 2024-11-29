@@ -81,27 +81,42 @@ def get_card(card_id):
 # Get Cards Endpoint
 @jwt_required()
 def get_cards():
-    """Only return cards that a user has subscribed to the corresponding group"""
+    """Only return cards that a user has subscribed to the corresponding group
+
+    Returns:
+    {
+        group_id: [
+            {
+                ...card details
+            },
+            ...
+        ],
+        ...
+    }
+    """
     user_id = get_jwt_identity()
     user_uuid = UUID(user_id)
 
     # Get all groups that the user has subscribed to
     user = User.query.filter_by(id=user_uuid).first()
     user_groups =  user.subscribed_groups.all()
-    # And get the cards that belong to those groups
-    cards = Card.query.filter(Card.group_id.in_([group.group_id for group in user_groups])).all()
 
-    cards_list = [{
-        'card_id': card.card_id,
-        'question': card.question,
-        'correct_answer': card.correct_answer,
-        'incorrect_answer': card.incorrect_answer,
-        'group_id': card.group_id,
-        'creator_id': card.creator_id,
-        'time_created': card.time_created,
-        'time_updated': card.time_updated,
-        'updated_by_id': card.updated_by_id
-    } for card in cards]
+    # And get the cards that belong to those groups
+    cards_list = {}
+    for group in user_groups:
+        group = Group.query.filter_by(group_id=group.group_id).first()
+        cards = group.cards
+        cards_list[str(group.group_id)] = [{
+            'card_id': str(card.card_id),
+            'question': card.question,
+            'correct_answer': card.correct_answer,
+            'incorrect_answer': card.incorrect_answer,
+            'group_id': str(card.group_id),
+            'creator_id': str(card.creator_id),
+            'time_created': card.time_created,
+            'time_updated': card.time_updated,
+            'updated_by_id': str(card.updated_by_id)
+        } for card in cards]
 
     return jsonify(cards_list), 200
 
