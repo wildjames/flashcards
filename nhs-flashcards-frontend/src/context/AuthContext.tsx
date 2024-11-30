@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (tokens: { access_token: string; refresh_token: string }) => void;
   logout: () => void;
+  checkAuth: () => void;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -100,8 +101,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     router.push("/login");
   };
 
+  const checkAuth = () => {
+    fetch("/api/protected", {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          console.log("User is authenticated");
+          setIsAuthenticated(true);
+          setLoading(false);
+        } else {
+          console.log("User is not authenticated");
+          setIsAuthenticated(false);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setIsAuthenticated(false);
+        setLoading(false);
+      });
+  };
+
   return (
-    <AuthContext.Provider value={{ loading, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{ loading, isAuthenticated, login, logout, checkAuth }}
+    >
       {children}
     </AuthContext.Provider>
   );
