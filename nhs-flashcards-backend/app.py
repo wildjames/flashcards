@@ -64,6 +64,7 @@ app.add_url_rule("/cards", view_func=card_endpoints.get_cards, methods=['GET'])
 app.add_url_rule("/cards/<uuid:card_id>", view_func=card_endpoints.get_card, methods=['GET'])
 app.add_url_rule("/cards/<uuid:card_id>", view_func=card_endpoints.update_card, methods=['PUT'])
 app.add_url_rule("/cards/<uuid:card_id>", view_func=card_endpoints.delete_card, methods=['DELETE'])
+app.add_url_rule("/cards/flashcard", view_func=card_endpoints.get_random_card, methods=['GET'])
 
 
 ### GROUP ENDPOINTS ###
@@ -71,9 +72,11 @@ import routes.group_endpoints as group_endpoints
 
 app.add_url_rule("/groups", view_func=group_endpoints.create_group, methods=['POST'])
 app.add_url_rule("/groups", view_func=group_endpoints.get_groups, methods=['GET'])
+app.add_url_rule("/groups/<uuid:group_id>", view_func=group_endpoints.get_group_info, methods=['GET'])
 app.add_url_rule("/groups/<uuid:group_id>", view_func=group_endpoints.update_group, methods=['PUT'])
 app.add_url_rule("/groups/<uuid:group_id>", view_func=group_endpoints.delete_group, methods=['DELETE'])
 app.add_url_rule("/groups/<uuid:group_id>/join", view_func=group_endpoints.add_user_to_group, methods=['POST'])
+app.add_url_rule("/groups/<uuid:group_id>/cards", view_func=group_endpoints.get_group_cards, methods=['GET'])
 
 
 ### DEV ENDPOINTS ###

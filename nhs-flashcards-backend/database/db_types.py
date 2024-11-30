@@ -35,7 +35,8 @@ class Group(db.Model):
     group_name = db.Column(db.String(256), nullable=False)
 
     # Relationships
-    cards = db.relationship('Card', backref='group', lazy=True)
+    # cards = db.relationship('Card', backref='group', lazy=True)
+    cards = db.relationship('Card', backref='group', lazy='dynamic')
 
 class Card(db.Model):
     __tablename__ = 'card'

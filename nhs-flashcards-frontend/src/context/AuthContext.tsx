@@ -52,8 +52,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${refreshToken}`,
         },
-        body: JSON.stringify({ refresh_token: refreshToken }),
       })
         .then((response) => response.json())
         .then((data) => {

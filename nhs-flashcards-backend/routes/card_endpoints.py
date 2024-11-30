@@ -2,6 +2,7 @@ from flask import request, jsonify
 from flask_jwt_extended import (
     jwt_required, get_jwt_identity
 )
+from sqlalchemy.sql.expression import func
 from uuid import UUID
 
 from database.db_interface import db
@@ -169,3 +170,42 @@ def delete_card(card_id):
     db.session.commit()
 
     return jsonify({'message': 'Card deleted'}), 200
+
+
+# Return a random flashcard for the user
+@jwt_required()
+def get_random_card():
+    user_id = get_jwt_identity()
+    user_uuid = UUID(user_id)
+    user = User.query.filter_by(id=user_uuid).first()
+
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+
+    # Get the group IDs the user is subscribed to
+    subscribed_groups = user.subscribed_groups.all()
+
+    if not subscribed_groups:
+        return jsonify({'error': 'No subscribed groups found'}), 404
+
+    group_ids = [group.group_id for group in subscribed_groups]
+
+    # Query for cards in the subscribed groups
+    card = Card.query.filter(Card.group_id.in_(group_ids)).order_by(func.random()).first()
+
+    if not card:
+        return jsonify({'error': 'No cards found in subscribed groups'}), 404
+
+    card_data = {
+        'card_id': card.card_id,
+        'question': card.question,
+        'correct_answer': card.correct_answer,
+        'incorrect_answer': card.incorrect_answer,
+        'group_id': card.group_id,
+        'creator_id': card.creator_id,
+        'time_created': card.time_created,
+        'time_updated': card.time_updated,
+        'updated_by_id': card.updated_by_id
+    }
+
+    return jsonify(card_data), 200

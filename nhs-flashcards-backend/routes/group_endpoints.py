@@ -102,3 +102,37 @@ def add_user_to_group(group_id):
     db.session.commit()
 
     return jsonify({'message': 'User added to group'}), 200
+
+# Get cards in group
+@jwt_required()
+def get_group_cards(group_id):
+    group = Group.query.filter_by(group_id=group_id).first()
+    if not group:
+        return jsonify({'message': 'Group not found'}), 404
+
+    cards = group.cards
+    cards_list = [{
+        'card_id': card.card_id,
+        'question': card.question,
+        'correct_answer': card.correct_answer,
+        'incorrect_answer': card.incorrect_answer,
+        'time_created': card.time_created,
+        'time_updated': card.time_updated
+    } for card in cards]
+
+    return jsonify(cards_list), 200
+
+# Get group information
+@jwt_required()
+def get_group_info(group_id):
+    group = Group.query.filter_by(group_id=group_id).first()
+    if not group:
+        return jsonify({'message': 'Group not found'}), 404
+
+    return jsonify({
+        'group_name': group.group_name,
+        'group_id': group.group_id,
+        'creator_id': group.creator_id,
+        'time_created': group.time_created,
+        'time_updated': group.time_updated
+    }), 200
