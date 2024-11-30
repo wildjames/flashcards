@@ -95,3 +95,28 @@ def get_user_groups():
         'time_updated': group.time_updated
     } for group in groups]
     return jsonify(groups_list), 200
+
+# Get a user's details from their user_id
+@jwt_required()
+def get_user_details():
+    user_id = get_jwt_identity()
+
+    # Request body contains a list of user_ids
+    data = request.get_json()
+    user_ids = data.get('user_ids')
+
+    if not user_ids:
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    # Get the user details
+    user_details = []
+    for user_id in user_ids:
+        user = User.query.filter_by(id=uuid.UUID(user_id)).first()
+        if user:
+            user_details.append({
+                'username': user.username,
+                'email': user.email,
+                'user_id': user.id
+            })
+
+    return jsonify(user_details), 200

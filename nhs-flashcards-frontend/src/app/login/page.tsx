@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
@@ -27,6 +27,14 @@ export default function LoginPage() {
   const [error, setError] = useState("");
 
   const authContext = useContext(AuthContext);
+
+  // Redirect to dashboard if already authenticated
+  useEffect(() => {
+    if (authContext?.isAuthenticated === true) {
+      console.log("Login page: User is already authenticated");
+      router.push("/dashboard");
+    }
+  }, [authContext?.isAuthenticated, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
