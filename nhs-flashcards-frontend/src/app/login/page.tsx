@@ -7,7 +7,7 @@ import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
 import Link from "@mui/material/Link";
-import Grid from "@mui/material/Grid";
+import Grid from "@mui/material/Grid2";
 import Box from "@mui/material/Box";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import Typography from "@mui/material/Typography";
@@ -28,13 +28,17 @@ export default function LoginPage() {
 
   const authContext = useContext(AuthContext);
 
-  // Redirect to dashboard if already authenticated
+  // Check if the user has some tokens already
   useEffect(() => {
-    if (authContext?.isAuthenticated === true) {
-      console.log("Login page: User is already authenticated");
+    console.log("AuthContext: ", authContext);
+    if (
+      authContext?.isAuthenticated === true &&
+      authContext?.loading === false
+    ) {
+      console.log("User is already authenticated. Redirecting to dashboard...");
       router.push("/dashboard");
     }
-  }, [authContext?.isAuthenticated, router]);
+  }, [authContext?.isAuthenticated, authContext?.loading, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -139,12 +143,12 @@ export default function LoginPage() {
               Sign In
             </Button>
             <Grid container>
-              <Grid item xs>
+              <Grid size="grow">
                 <Link href="/forgot-password" variant="body2">
                   Forgot password?
                 </Link>
               </Grid>
-              <Grid item>
+              <Grid>
                 <Link href="/register" variant="body2">
                   {"Don't have an account? Sign Up"}
                 </Link>

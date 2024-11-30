@@ -108,10 +108,13 @@ def get_user_details():
     if not user_ids:
         return jsonify({'message': 'Missing required fields'}), 400
 
+    # Check that each user_id is a valid UUID. Remove duplicates.
+    user_ids = list(set([uuid.UUID(user_id) for user_id in user_ids if uuid.UUID(user_id)]))
+
     # Get the user details
     user_details = []
     for user_id in user_ids:
-        user = User.query.filter_by(id=uuid.UUID(user_id)).first()
+        user = User.query.filter_by(id=user_id).first()
         if user:
             user_details.append({
                 'username': user.username,

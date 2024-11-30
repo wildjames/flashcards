@@ -1,16 +1,14 @@
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
+import React, { useContext } from "react";
 import Button from "@mui/material/Button";
+import { AuthContext } from "@/context/AuthContext";
 
 export default function LogoutButton() {
-  const router = useRouter();
+  const authContext = useContext(AuthContext);
 
   const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    router.push("/login");
+    authContext?.logout();
   };
 
   return (

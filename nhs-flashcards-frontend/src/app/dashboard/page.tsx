@@ -10,7 +10,6 @@ import {
   Typography,
   Container,
   Box,
-  Grid2,
   Card,
   CardActionArea,
   CardContent,
@@ -22,6 +21,7 @@ import {
   TextField,
   DialogActions,
 } from "@mui/material";
+import Grid from "@mui/material/Grid2";
 
 type GroupData = {
   group_id: string;
@@ -57,11 +57,10 @@ export default function DashboardPage() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authContext?.isAuthenticated) {
-      console.log("User is not authenticated");
+    if (!authContext?.isAuthenticated && !authContext?.loading) {
       router.push("/login");
     }
-  }, [authContext?.isAuthenticated, router]);
+  }, [authContext, router]);
 
   const fetchGroups = useCallback(() => {
     setLoading(true);
@@ -92,9 +91,11 @@ export default function DashboardPage() {
           setLoading(false);
         });
     } else {
-      router.push("/login");
+      console.log("Failed to fetch groups: User is not authenticated");
+      setLoading(false);
+      setError("Authentication Error");
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     fetchGroups();
@@ -104,14 +105,17 @@ export default function DashboardPage() {
   useEffect(() => {
     if (groups.length > 0) {
       const creatorIds = groups.map((group: GroupData) => group.creator_id);
-      // /api/users with JSON body { "user_ids": ["id1", "id2", ...] }
+
+      // Remove duplicates
+      const uniqueCreatorIds = Array.from(new Set(creatorIds));
+
       fetch("/api/user-details", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
         },
-        body: JSON.stringify({ user_ids: creatorIds }),
+        body: JSON.stringify({ user_ids: uniqueCreatorIds }),
       })
         .then((response) => {
           if (response.ok) return response.json();
@@ -179,7 +183,9 @@ export default function DashboardPage() {
           setCreatingGroup(false);
         });
     } else {
-      router.push("/login");
+      console.log("Failed to create group: User is not authenticated");
+      setCreateError("Authentication Error");
+      setCreatingGroup(false);
     }
   };
 
@@ -197,7 +203,7 @@ export default function DashboardPage() {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="md">
+      <Container maxWidth="lg">
         <Box sx={{ mt: 4 }}>
           {loading ? (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -208,9 +214,16 @@ export default function DashboardPage() {
               {error}
             </Typography>
           ) : groups.length > 0 ? (
-            <Grid2 container spacing={2}>
+            <Grid container spacing={3}>
               {groups.map((group: GroupData) => (
-                <Grid2 key={group.group_id}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    md: 6,
+                    lg: 3,
+                  }}
+                  key={group.group_id}
+                >
                   <Card>
                     <CardActionArea
                       onClick={() => handleCardClick(group.group_id)}
@@ -228,13 +241,12 @@ export default function DashboardPage() {
                             {userIdMapping[group.creator_id].username}
                           </Typography>
                         )}
-
                       </CardContent>
                     </CardActionArea>
                   </Card>
-                </Grid2>
+                </Grid>
               ))}
-            </Grid2>
+            </Grid>
           ) : (
             <Typography variant="body1">
               You are not subscribed to any groups.
