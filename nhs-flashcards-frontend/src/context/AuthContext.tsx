@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
@@ -8,7 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (tokens: { access_token: string; refresh_token: string }) => void;
   logout: () => void;
-  checkAuth: () => void;
+  checkAuth: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -18,70 +18,81 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const token = localStorage.getItem("access_token");
+  const tokenRefresh = useCallback(async () => {
+    console.log("Refreshing token...");
+    const refreshToken = localStorage.getItem("refresh_token");
 
-    // If there's no token, then we aren't authenticated
-    if (!token) {
-      console.log("User does not have an access token");
+    if (!refreshToken) {
+      console.log("User does not have a refresh token. Not authenticated.");
       setIsAuthenticated(false);
       setLoading(false);
-      return;
+      return false;
     }
 
-    // If there is a token, check if it's expired
-    const decodedToken = JSON.parse(atob(token.split(".")[1]));
-    const currentTime = Date.now() / 1000;
-
-    // If the token is expired, use the refresh token to get a new access token
-    if (decodedToken.exp < currentTime) {
-      console.log("User access token is expired. Refreshing token...");
-      const refreshToken = localStorage.getItem("refresh_token");
-
-      if (!refreshToken) {
-        console.log("User does not have a refresh token. Not authenticated.");
-        setIsAuthenticated(false);
-        setLoading(false);
-        // Clear the access token from local storage
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-
-        return;
-      }
-
-      fetch("/api/refresh", {
+    try {
+      const response = await fetch("/api/refresh", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${refreshToken}`,
         },
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.access_token && data.refresh_token) {
-            console.log("Token refreshed successfully");
-            localStorage.setItem("access_token", data.access_token);
-            localStorage.setItem("refresh_token", data.refresh_token);
-            setIsAuthenticated(true);
-            setLoading(false);
-          } else {
-            // Refreshing failed, so clear the tokens and set the user as not authenticated
-            console.log("Token refresh failed. User is not authenticated.");
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-            setIsAuthenticated(false);
-            setLoading(false);
+      });
 
-            return;
-          }
-        });
+      const data = await response.json();
+
+      if (data.access_token) {
+        console.log("Token refreshed successfully");
+        localStorage.setItem("access_token", data.access_token);
+        setIsAuthenticated(true);
+        setLoading(false);
+        return true;
+      } else {
+        console.log("Token refresh failed. User is not authenticated.");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        setIsAuthenticated(false);
+        setLoading(false);
+        return false;
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      setIsAuthenticated(false);
+      setLoading(false);
+      return false;
     }
+  }, []);
 
-    // If the token is not expired, we are authenticated
-    console.log("User has a non-expired access token");
-    setIsAuthenticated(true);
-    setLoading(false);
-  }, [router]);
+  useEffect(() => {
+    const checkToken = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        console.log("User does not have an access token");
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      const decodedToken = JSON.parse(atob(token.split(".")[1]));
+      const currentTime = Date.now() / 1000;
+
+      if (decodedToken.exp < currentTime) {
+        console.log("User access token is expired. Refreshing token...");
+        const success = await tokenRefresh();
+        if (!success) {
+          return;
+        }
+      } else {
+        console.log("User has a non-expired access token");
+        setIsAuthenticated(true);
+        setLoading(false);
+      }
+    };
+
+    checkToken();
+  }, [router, tokenRefresh]);
 
   const login = (tokens: { access_token: string; refresh_token: string }) => {
     localStorage.setItem("access_token", tokens.access_token);
@@ -101,28 +112,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     router.push("/login");
   };
 
-  const checkAuth = () => {
-    fetch("/api/protected", {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      },
-    })
-      .then((response) => {
-        if (response.ok) {
-          console.log("User is authenticated");
-          setIsAuthenticated(true);
-          setLoading(false);
-        } else {
-          console.log("User is not authenticated");
-          setIsAuthenticated(false);
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
+  const checkAuth = async () => {
+    if (
+      !localStorage.getItem("access_token") &&
+      !localStorage.getItem("refresh_token")
+    ) {
+      console.log(
+        "User does not have an access token or a refresh token. Not authenticated."
+      );
+      setIsAuthenticated(false);
+      setLoading(false);
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    const decodedToken = JSON.parse(atob(token!.split(".")[1]));
+    const currentTime = Date.now() / 1000;
+
+    if (decodedToken.exp < currentTime) {
+      console.log("User access token is expired. Refreshing token...");
+      const success = await tokenRefresh();
+      if (!success) {
+        console.log("Token refresh failed. User is not authenticated.");
         setIsAuthenticated(false);
         setLoading(false);
+        return;
+      } else {
+        console.log("Token refreshed successfully. User is authenticated.");
+        setIsAuthenticated(true);
+        setLoading(false);
+      }
+    }
+
+    try {
+      const response = await fetch("/api/protected", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
       });
+
+      if (response.ok) {
+        console.log("User is authenticated");
+        setIsAuthenticated(true);
+        setLoading(false);
+      } else {
+        console.log("User is not authenticated");
+        setIsAuthenticated(false);
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error(err);
+      setIsAuthenticated(false);
+      setLoading(false);
+    }
   };
 
   return (

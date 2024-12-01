@@ -11,10 +11,20 @@ from flask_cors import CORS
 
 app = Flask(__name__)
 
+logger = app.logger
+
 # Configuration
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = os.getenv("JWT_ACCESS_TOKEN_EXPIRES", timedelta(minutes=15))
-app.config['JWT_REFRESH_TOKEN_EXPIRES'] = os.getenv("JWT_REFRESH_TOKEN_EXPIRES", timedelta(days=30))
+
+jwt_access_expires = int(os.getenv('JWT_ACCESS_TOKEN_EXPIRES', 15))
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(minutes=jwt_access_expires)
+
+jwt_refresh_expires = int(os.getenv('JWT_REFRESH_TOKEN_EXPIRES', 30))
+app.config['JWT_REFRESH_TOKEN_EXPIRES'] =  timedelta(days=jwt_refresh_expires)
+
+logger.info(f"JWT_ACCESS_TOKEN_EXPIRES: {app.config['JWT_ACCESS_TOKEN_EXPIRES']}")
+logger.info(f"JWT_REFRESH_TOKEN_EXPIRES: {app.config['JWT_REFRESH_TOKEN_EXPIRES']}")
+
 
 if not app.config['JWT_SECRET_KEY']:
     raise ValueError("JWT_SECRET_KEY environment variable not set")

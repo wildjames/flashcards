@@ -58,6 +58,7 @@ export default function DashboardPage() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authContext?.isAuthenticated && !authContext?.loading) {
+      console.log("Dashboard not authenticated, redirecting to login");
       router.push("/login");
     }
   }, [authContext, router]);

@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import Button from "@mui/material/Button";
 import { AuthContext } from "@/context/AuthContext";
 
 export default function LogoutButton() {
   const authContext = useContext(AuthContext);
 
-  // Every 30 seconds, check if the user is still logged in
-  setInterval(() => {
-    authContext?.checkAuth();
-  }, 30000);
+  useEffect(() => {
+    // Set up the interval when the component mounts
+    const interval = setInterval(() => {
+      authContext?.checkAuth();
+    }, 30000);
+
+    // Clean up the interval when the component unmounts
+    return () => clearInterval(interval);
+  }, [authContext]);
 
   const handleLogout = () => {
     authContext?.logout();
