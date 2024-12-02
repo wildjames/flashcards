@@ -20,7 +20,10 @@ import {
   DialogContent,
   TextField,
   DialogActions,
+  Fab,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import BoltIcon from "@mui/icons-material/Bolt";
 import Grid from "@mui/material/Grid2";
 
 type GroupData = {
@@ -192,15 +195,35 @@ export default function DashboardPage() {
 
   return (
     <>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Dashboard
+      {/* <Toolbar>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}
+          >
+            Group Management
+            <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
+              <DashboardButton />
+              <LogoutButton />
+            </Box>
           </Typography>
           <Button color="inherit" onClick={() => setOpenDialog(true)}>
-            Create Group
+            Create Card
           </Button>
-          <LogoutButton />
+        </Toolbar>
+      </AppBar> */}
+
+      <AppBar position="static">
+        <Toolbar>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}
+          >
+            Dashboard
+          </Typography>
+
+          <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
+            <LogoutButton />
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -254,6 +277,28 @@ export default function DashboardPage() {
             </Typography>
           )}
         </Box>
+
+        <Fab
+          variant="extended"
+          color="primary"
+          aria-label="add"
+          sx={{ position: "fixed", bottom: 16, right: 16 }}
+          onClick={() => setOpenDialog(true)}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Create Group
+        </Fab>
+
+        <Fab
+          variant="extended"
+          color="primary"
+          aria-label="add"
+          sx={{ position: "fixed", bottom: 16, right: "50%" }}
+          onClick={() => router.push("/flashcard")}
+        >
+          <BoltIcon sx={{ mr: 1 }} />
+          Flashcard
+        </Fab>
 
         {/* Group Creation Dialog */}
         <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>

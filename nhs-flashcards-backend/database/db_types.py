@@ -36,7 +36,7 @@ class Group(db.Model):
 
     # Relationships
     # cards = db.relationship('Card', backref='group', lazy=True)
-    cards = db.relationship('Card', backref='group', lazy='dynamic')
+    cards = db.relationship('Card', backref='group', lazy='dynamic', cascade='all, delete-orphan')
 
 class Card(db.Model):
     __tablename__ = 'card'

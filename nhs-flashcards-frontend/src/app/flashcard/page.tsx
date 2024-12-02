@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { AuthContext } from "@/context/AuthContext";
 import {
   AppBar,
   Toolbar,
@@ -11,12 +10,60 @@ import {
   Box,
   Button,
   CircularProgress,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
-  FormControl,
+  Card,
+  CardContent,
 } from "@mui/material";
+import { styled } from "@mui/material/styles";
+
+import { AuthContext } from "@/context/AuthContext";
 import LogoutButton from "@/app/components/LogoutButton";
+import DashboardButton from "@/app/components/DashboardButton";
+
+interface FlipCardProps {
+  isflipped: string;
+  correct: string;
+}
+
+const FlipCard = styled(Box)<FlipCardProps>(
+  ({ theme, isflipped, correct }) => ({
+    // perspective: "1000px", // Doesn't really have much effect
+    position: "relative",
+    width: "100%",
+    minWidth: "20em",
+    minHeight: "10em",
+    margin: theme.spacing(5),
+    cursor: "pointer",
+    transformStyle: "preserve-3d",
+    transform: isflipped === "true" ? "rotateY(180deg)" : "none",
+    transition: "transform 0.6s",
+
+    "& .front, & .back": {
+      position: "absolute",
+      backfaceVisibility: "hidden",
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      borderRadius: "4px",
+      boxShadow: theme.shadows[3],
+    },
+
+    "& .front": {
+      background: theme.palette.background.paper,
+      color: theme.palette.text.primary,
+    },
+
+    "& .back": {
+      transform: "rotateY(180deg)",
+      background:
+        correct === "true"
+          ? theme.palette.success.main
+          : theme.palette.error.main,
+      color: theme.palette.common.white,
+    },
+  })
+);
 
 type CardData = {
   card_id: string;
@@ -37,18 +84,17 @@ export default function FlashcardPage() {
   const [card, setCard] = useState<CardData | null>(null);
   const [error, setError] = useState("");
   const [options, setOptions] = useState<string[]>([]);
-  const [selectedAnswer, setSelectedAnswer] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [flippedCard, setFlippedCard] = useState<number | null>(null);
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number | null>(
+    null
+  );
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authContext?.isAuthenticated && !authContext?.loading) {
       router.push("/login");
     }
   }, [authContext, router]);
 
-  // Fetch a random flashcard
   useEffect(() => {
     const accessToken = localStorage.getItem("access_token");
     if (accessToken) {
@@ -63,13 +109,14 @@ export default function FlashcardPage() {
         })
         .then((data: CardData) => {
           setCard(data);
-          // Prepare and shuffle options
           const answers = [data.correct_answer, data.incorrect_answer];
-          for (let i = answers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [answers[i], answers[j]] = [answers[j], answers[i]];
-          }
+          const correctIndex = Math.floor(Math.random() * 2);
+          [answers[0], answers[correctIndex]] = [
+            answers[correctIndex],
+            answers[0],
+          ];
           setOptions(answers);
+          setCorrectAnswerIndex(correctIndex);
           setLoading(false);
         })
         .catch((err) => {
@@ -82,24 +129,17 @@ export default function FlashcardPage() {
     }
   }, [router]);
 
-  const handleSubmit = () => {
-    setSubmitted(true);
-    if (selectedAnswer === card?.correct_answer) {
-      setIsCorrect(true);
-    } else {
-      setIsCorrect(false);
-    }
+  const handleAnswerClick = (index: number) => {
+    setFlippedCard(index);
   };
 
   const handleNext = () => {
-    // Reset state and fetch a new card
     setLoading(true);
     setCard(null);
     setError("");
     setOptions([]);
-    setSelectedAnswer("");
-    setSubmitted(false);
-    setIsCorrect(null);
+    setFlippedCard(null);
+    setCorrectAnswerIndex(null);
 
     const accessToken = localStorage.getItem("access_token");
     if (accessToken) {
@@ -114,13 +154,14 @@ export default function FlashcardPage() {
         })
         .then((data: CardData) => {
           setCard(data);
-          // Prepare and shuffle options
           const answers = [data.correct_answer, data.incorrect_answer];
-          for (let i = answers.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [answers[i], answers[j]] = [answers[j], answers[i]];
-          }
+          const correctIndex = Math.floor(Math.random() * 2);
+          [answers[0], answers[correctIndex]] = [
+            answers[correctIndex],
+            answers[0],
+          ];
           setOptions(answers);
+          setCorrectAnswerIndex(correctIndex);
           setLoading(false);
         })
         .catch((err) => {
@@ -140,6 +181,7 @@ export default function FlashcardPage() {
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
             Flashcard Quiz
           </Typography>
+          <DashboardButton />
           <LogoutButton />
         </Toolbar>
       </AppBar>
@@ -154,54 +196,40 @@ export default function FlashcardPage() {
             {error}
           </Typography>
         ) : card ? (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h5">{card.question}</Typography>
-            <FormControl component="fieldset" sx={{ mt: 2 }}>
-              <RadioGroup
-                name="answers"
-                value={selectedAnswer}
-                onChange={(e) => setSelectedAnswer(e.target.value)}
-              >
-                {options.map((option, index) => (
-                  <FormControlLabel
-                    key={index}
-                    value={option}
-                    control={<Radio disabled={submitted} />}
-                    label={option}
-                  />
-                ))}
-              </RadioGroup>
-            </FormControl>
-            {!submitted ? (
+          <Box sx={{ mt: 4, textAlign: "center" }}>
+            <Card sx={{ mb: 4, padding: 2 }}>
+              <CardContent>
+                <Typography variant="h5">{card.question}</Typography>
+              </CardContent>
+            </Card>
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              {options.map((option, index) => (
+                <FlipCard
+                  key={index}
+                  isflipped={(flippedCard === index).toString()}
+                  correct={(index === correctAnswerIndex).toString()}
+                  onClick={() => handleAnswerClick(index)}
+                >
+                  <Box className="front">
+                    <Typography>{option}</Typography>
+                  </Box>
+                  <Box className="back">
+                    <Typography>
+                      {index === correctAnswerIndex ? "Correct!" : "Incorrect"}
+                    </Typography>
+                  </Box>
+                </FlipCard>
+              ))}
+            </Box>
+            {flippedCard !== null && (
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleSubmit}
-                disabled={!selectedAnswer}
-                sx={{ mt: 2 }}
+                onClick={handleNext}
+                sx={{ mt: 4 }}
               >
-                Submit
+                Next Question
               </Button>
-            ) : (
-              <>
-                {isCorrect ? (
-                  <Typography variant="h6" color="success.main" sx={{ mt: 2 }}>
-                    Correct!
-                  </Typography>
-                ) : (
-                  <Typography variant="h6" color="error.main" sx={{ mt: 2 }}>
-                    Incorrect. The correct answer was: {card.correct_answer}
-                  </Typography>
-                )}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={handleNext}
-                  sx={{ mt: 2 }}
-                >
-                  Next Question
-                </Button>
-              </>
             )}
           </Box>
         ) : null}

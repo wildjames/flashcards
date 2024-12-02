@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { AuthContext } from "@/context/AuthContext";
 import {
   AppBar,
   Toolbar,
@@ -19,9 +18,15 @@ import {
   DialogContent,
   TextField,
   DialogActions,
+  Fab,
 } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import Grid from "@mui/material/Grid2";
+
+import { AuthContext } from "@/context/AuthContext";
 import LogoutButton from "@/app/components/LogoutButton";
+import DashboardButton from "@/app/components/DashboardButton";
 
 type GroupData = {
   group_id: string;
@@ -134,6 +139,32 @@ export default function GroupPage() {
       setLoadingGroup(false);
     }
   }, [groupId]);
+
+  // Delete group
+  const handleDeleteGroup = () => {
+    const accessToken = localStorage.getItem("access_token");
+    if (accessToken) {
+      fetch(`/api/groups/${groupId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            router.push("/dashboard");
+          } else {
+            throw new Error("Failed to delete group");
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          setGroupError(err.message);
+        });
+    } else {
+      setGroupError("Authentication Error");
+    }
+  };
 
   // Fetch cards for the group
   const fetchCards = useCallback(() => {
@@ -313,13 +344,16 @@ export default function GroupPage() {
     <>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}
+          >
             Group Management
           </Typography>
-          <Button color="inherit" onClick={() => setOpenDialog(true)}>
-            Create Card
-          </Button>
-          <LogoutButton />
+          <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
+            <DashboardButton />
+            <LogoutButton />
+          </Box>
         </Toolbar>
       </AppBar>
 
@@ -347,6 +381,28 @@ export default function GroupPage() {
           ) : null}
         </Box>
 
+        <Fab
+          variant="extended"
+          color="primary"
+          aria-label="add"
+          sx={{ position: "fixed", bottom: 20, right: 30 }}
+          onClick={() => setOpenDialog(true)}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Create Card
+        </Fab>
+
+        <Fab
+          variant="extended"
+          color="secondary"
+          aria-label="delete"
+          sx={{ position: "fixed", bottom: 20, left: 30 }}
+          onClick={() => handleDeleteGroup()}
+        >
+          <DeleteIcon sx={{ mr: 1 }} />
+          Delete Group
+        </Fab>
+
         {/* Cards */}
         <Box sx={{ mt: 4 }}>
           {loadingCards ? (
@@ -368,7 +424,6 @@ export default function GroupPage() {
                           {card.question}
                         </Typography>
                         {/* Additional card details can be added here */}
-                        {/* FIXME: The clickable area doesn't grow with the card */}
                         {/* Could have the answer, but that's spoilers I guess */}
                       </CardContent>
                     </CardActionArea>

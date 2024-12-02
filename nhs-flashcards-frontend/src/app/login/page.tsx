@@ -38,7 +38,7 @@ export default function LoginPage() {
       console.log("User is already authenticated. Redirecting to dashboard...");
       router.push("/dashboard");
     }
-  }, [authContext?.isAuthenticated, authContext?.loading, router]);
+  }, [authContext, authContext?.isAuthenticated, authContext?.loading, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
