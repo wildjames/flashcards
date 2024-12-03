@@ -14,7 +14,6 @@ def create_card():
     data = request.get_json()
     question = data.get('question')
     correct_answer = data.get('correct_answer')
-    incorrect_answer = data.get('incorrect_answer')
     group_id = UUID(data.get('group_id'))
 
     if not all([question, correct_answer, group_id]):
@@ -37,7 +36,6 @@ def create_card():
     new_card = Card(
         question=question,
         correct_answer=correct_answer,
-        incorrect_answer=incorrect_answer,
         group_id=group_id,
         creator_id=user_uuid,
         updated_by_id=user_uuid
@@ -69,7 +67,6 @@ def get_card(card_id):
         'card_id': card.card_id,
         'question': card.question,
         'correct_answer': card.correct_answer,
-        'incorrect_answer': card.incorrect_answer,
         'group_id': card.group_id,
         'creator_id': card.creator_id,
         'time_created': card.time_created,
@@ -111,7 +108,6 @@ def get_cards():
             'card_id': str(card.card_id),
             'question': card.question,
             'correct_answer': card.correct_answer,
-            'incorrect_answer': card.incorrect_answer,
             'group_id': str(card.group_id),
             'creator_id': str(card.creator_id),
             'time_created': card.time_created,
@@ -143,7 +139,6 @@ def update_card(card_id):
     # Update fields
     card.question = data.get('question', card.question)
     card.correct_answer = data.get('correct_answer', card.correct_answer)
-    card.incorrect_answer = data.get('incorrect_answer', card.incorrect_answer)
     card.updated_by_id = user_uuid
     db.session.commit()
 

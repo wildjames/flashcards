@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import uuid
 
+from llm.llm import get_incorrect_answer
+
 # Initialize the SQLAlchemy object without an app
 db = SQLAlchemy(
     engine_options={
@@ -47,7 +49,7 @@ class Card(db.Model):
     card_id = db.Column(db.UUID, primary_key=True, default=uuid.uuid4)
     question = db.Column(db.Text, nullable=False)
     correct_answer = db.Column(db.Text, nullable=False)
-    incorrect_answer = db.Column(db.Text)
+    # incorrect_answer = db.Column(db.Text)
     group_id = db.Column(db.UUID, db.ForeignKey('group.group_id'), nullable=False)
     creator_id = db.Column(db.UUID, db.ForeignKey('user.id'), nullable=False)
     time_created = db.Column(db.DateTime, default=lambda: datetime.now().isoformat())
@@ -57,6 +59,14 @@ class Card(db.Model):
     # Relationships
     updated_by = db.relationship('User', foreign_keys=[updated_by_id], backref='cards_updated')
     user_data = db.relationship('UserCardData', backref='card', lazy='dynamic')
+
+    # Property to generate incorrect_answer dynamically
+    @property
+    def incorrect_answer(self):
+        try:
+            return get_incorrect_answer(self.question, self.correct_answer)
+        except Exception as e:
+            return ""
 
 class UserCardData(db.Model):
     __tablename__ = 'user_card_data'

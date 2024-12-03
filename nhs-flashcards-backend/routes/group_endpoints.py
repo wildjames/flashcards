@@ -115,7 +115,6 @@ def get_group_cards(group_id):
         'card_id': card.card_id,
         'question': card.question,
         'correct_answer': card.correct_answer,
-        'incorrect_answer': card.incorrect_answer,
         'time_created': card.time_created,
         'time_updated': card.time_updated
     } for card in cards]

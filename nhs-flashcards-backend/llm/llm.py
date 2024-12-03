@@ -3,7 +3,7 @@ import openai
 
 
 
-def get_incorrect_answers(question, correct_answer):
+def get_incorrect_answer(question, correct_answer):
     """
     Generate two incorrect answers for a given question and correct answer using OpenAI's API.
 
@@ -37,14 +37,14 @@ def get_incorrect_answers(question, correct_answer):
         project=OPENAI_PROJECT_ID,
     )
 
-    # Craft the prompt to generate incorrect answers
+    # Craft the prompt to generate incorrect answer
     prompt = [
         {
             "content": (
-                f"Generate two plausible but incorrect answers to the following question. Return absolutley no other text, but the two answers separated by a '|' character.\n\n"
+                f"Generate one plausible but incorrect answer to the following question. Return absolutley no other text, but the single answer.\n\n"
                 f"Question: {question}\n"
                 f"Correct Answer: {correct_answer}\n"
-                f"Incorrect Answers:"
+                f"Incorrect Answer:"
             ),
             "role": "system"
         }
@@ -61,10 +61,11 @@ def get_incorrect_answers(question, correct_answer):
         )
 
         # Extract the text from the API response
-        incorrect_answers = response.choices[0].message.content
+        incorrect_answer = response.choices[0].message.content
 
         # Split the response into individual answers
-        return [answer.strip() for answer in incorrect_answers.split('|') if answer.strip()]
+        return incorrect_answer.strip()
+
     except Exception as e:
         print(f"An error occurred while generating incorrect answers: {e}")
         return []
@@ -73,7 +74,7 @@ def get_incorrect_answers(question, correct_answer):
 if __name__ == "__main__":
     question = "What does CPT stand for?"
     correct_answer = "Clinical Prescription Tracker"
-    incorrect_answers = get_incorrect_answers(question, correct_answer)
+    incorrect_answers = get_incorrect_answer(question, correct_answer)
 
     print("Generated Incorrect Answers:")
     for idx, answer in enumerate(incorrect_answers, start=1):

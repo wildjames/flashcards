@@ -8,25 +8,30 @@ FRONTEND_DIR := /workspaces/nhs-flashcards/nhs-flashcards-frontend
 VENV_DIR := $(BACKEND_DIR)/venv
 PYTHON := python3
 PIP := $(VENV_DIR)/bin/pip
+SHELL := /bin/bash
 
 # Backend commands
 create-db:
-	cd $(BACKEND_DIR) && \
+	source .env && \
+		cd $(BACKEND_DIR) && \
 		$(VENV_DIR)/bin/flask db init
 
 migrate:
-	cd $(BACKEND_DIR) && \
+	source .env && \
+		cd $(BACKEND_DIR) && \
 		$(VENV_DIR)/bin/flask db migrate && \
 		$(VENV_DIR)/bin/flask db upgrade
 
 install-backend:
-	cd $(BACKEND_DIR) && \
+	source .env && \
+		cd $(BACKEND_DIR) && \
 		$(PYTHON) -m venv venv && \
 		$(VENV_DIR)/bin/pip install --upgrade pip && \
 		$(VENV_DIR)/bin/pip install -r requirements.txt
 
 run-backend-dev:
-	cd $(BACKEND_DIR) && \
+	source .env && \
+		cd $(BACKEND_DIR) && \
 		export FLASK_APP=app.py; \
 		export FLASK_ENV=development; \
 		$(VENV_DIR)/bin/flask --debug run --host=0.0.0.0
@@ -45,7 +50,8 @@ install-frontend:
 		npm install --verbose
 
 run-frontend-dev:
-	cd $(FRONTEND_DIR) && \
+	source .env && \
+		cd $(FRONTEND_DIR) && \
 		npm run dev
 
 lint-frontend:
