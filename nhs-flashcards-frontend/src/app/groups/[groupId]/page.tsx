@@ -46,7 +46,6 @@ type CardData = {
   card_id: string;
   question: string;
   correct_answer: string;
-  incorrect_answer: string;
   group_id: string;
   creator_id: string;
   time_created: string;
@@ -71,7 +70,6 @@ export default function GroupPage() {
   // For creating new cards
   const [newQuestion, setNewQuestion] = useState("");
   const [newCorrectAnswer, setNewCorrectAnswer] = useState("");
-  const [newIncorrectAnswer, setNewIncorrectAnswer] = useState("");
   const [creatingCard, setCreatingCard] = useState(false);
   const [createCardError, setCreateCardError] = useState("");
 
@@ -80,7 +78,6 @@ export default function GroupPage() {
   const [editCard, setEditCard] = useState<CardData | null>(null);
   const [editQuestion, setEditQuestion] = useState("");
   const [editCorrectAnswer, setEditCorrectAnswer] = useState("");
-  const [editIncorrectAnswer, setEditIncorrectAnswer] = useState("");
   const [updatingCard, setUpdatingCard] = useState(false);
   const [updateCardError, setUpdateCardError] = useState("");
 
@@ -204,11 +201,7 @@ export default function GroupPage() {
     setCreatingCard(true);
     setCreateCardError("");
     const accessToken = localStorage.getItem("access_token");
-    if (
-      !newQuestion.trim() ||
-      !newCorrectAnswer.trim() ||
-      !newIncorrectAnswer.trim()
-    ) {
+    if (!newQuestion.trim() || !newCorrectAnswer.trim()) {
       setCreateCardError("All fields are required");
       setCreatingCard(false);
       return;
@@ -223,7 +216,6 @@ export default function GroupPage() {
         body: JSON.stringify({
           question: newQuestion,
           correct_answer: newCorrectAnswer,
-          incorrect_answer: newIncorrectAnswer,
           group_id: groupId,
         }),
       })
@@ -235,7 +227,6 @@ export default function GroupPage() {
           fetchCards();
           setNewQuestion("");
           setNewCorrectAnswer("");
-          setNewIncorrectAnswer("");
         })
         .catch((err) => {
           console.error(err);
@@ -254,7 +245,6 @@ export default function GroupPage() {
     setEditCard(card);
     setEditQuestion(card.question);
     setEditCorrectAnswer(card.correct_answer);
-    setEditIncorrectAnswer(card.incorrect_answer);
     setOpenEditDialog(true);
   };
 
@@ -263,11 +253,7 @@ export default function GroupPage() {
     setUpdatingCard(true);
     setUpdateCardError("");
     const accessToken = localStorage.getItem("access_token");
-    if (
-      !editQuestion.trim() ||
-      !editCorrectAnswer.trim() ||
-      !editIncorrectAnswer.trim()
-    ) {
+    if (!editQuestion.trim() || !editCorrectAnswer.trim()) {
       setUpdateCardError("All fields are required");
       setUpdatingCard(false);
       return;
@@ -282,7 +268,6 @@ export default function GroupPage() {
         body: JSON.stringify({
           question: editQuestion,
           correct_answer: editCorrectAnswer,
-          incorrect_answer: editIncorrectAnswer,
         }),
       })
         .then((response) => {
@@ -293,7 +278,6 @@ export default function GroupPage() {
           fetchCards();
           setEditQuestion("");
           setEditCorrectAnswer("");
-          setEditIncorrectAnswer("");
           setUpdatingCard(false);
           setOpenEditDialog(false);
         })
@@ -461,16 +445,6 @@ export default function GroupPage() {
               value={newCorrectAnswer}
               onChange={(e) => setNewCorrectAnswer(e.target.value)}
             />
-            <TextField
-              margin="dense"
-              id="incorrect_answer"
-              label="Incorrect Answer"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={newIncorrectAnswer}
-              onChange={(e) => setNewIncorrectAnswer(e.target.value)}
-            />
             {createCardError && (
               <Typography color="error" variant="body2" sx={{ mt: 1 }}>
                 {createCardError}
@@ -518,16 +492,6 @@ export default function GroupPage() {
               variant="standard"
               value={editCorrectAnswer}
               onChange={(e) => setEditCorrectAnswer(e.target.value)}
-            />
-            <TextField
-              margin="dense"
-              id="edit_incorrect_answer"
-              label="Incorrect Answer"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={editIncorrectAnswer}
-              onChange={(e) => setEditIncorrectAnswer(e.target.value)}
             />
             {updateCardError && (
               <Typography color="error" variant="body2" sx={{ mt: 1 }}>

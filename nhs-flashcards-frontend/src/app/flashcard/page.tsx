@@ -110,11 +110,13 @@ export default function FlashcardPage() {
         .then((data: CardData) => {
           setCard(data);
           const answers = [data.correct_answer, data.incorrect_answer];
+          // Randomly shuffle the answers
           const correctIndex = Math.floor(Math.random() * 2);
           [answers[0], answers[correctIndex]] = [
             answers[correctIndex],
             answers[0],
           ];
+
           setOptions(answers);
           setCorrectAnswerIndex(correctIndex);
           setLoading(false);
