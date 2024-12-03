@@ -262,7 +262,6 @@ Create a new flashcard within a group.
   {
     "question": "Flashcard question",
     "correct_answer": "Correct answer",
-    "incorrect_answer": "Incorrect answer", // Optional
     "group_id": "uuid"
   }
   ```
@@ -316,7 +315,6 @@ Retrieve all cards from groups the user is subscribed to.
           "card_id": "uuid",
           "question": "Question text",
           "correct_answer": "Correct answer",
-          "incorrect_answer": "Incorrect answer",
           "group_id": "uuid",
           "creator_id": "uuid",
           "time_created": "timestamp",
@@ -356,7 +354,6 @@ Retrieve a specific card.
       "card_id": "uuid",
       "question": "Question text",
       "correct_answer": "Correct answer",
-      "incorrect_answer": "Incorrect answer",
       "group_id": "uuid",
       "creator_id": "uuid",
       "time_created": "timestamp",
@@ -404,7 +401,6 @@ Update an existing card.
   {
     "question": "Updated question",
     "correct_answer": "Updated answer",
-    "incorrect_answer": "Updated incorrect answer"
   }
   ```
 
