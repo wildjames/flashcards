@@ -3,7 +3,11 @@ from datetime import datetime
 import uuid
 
 # Initialize the SQLAlchemy object without an app
-db = SQLAlchemy()
+db = SQLAlchemy(
+    engine_options={
+        "pool_recycle": 3600,
+    }
+)
 
 # Association table for the many-to-many relationship between Users and Groups
 user_group = db.Table('user_group',

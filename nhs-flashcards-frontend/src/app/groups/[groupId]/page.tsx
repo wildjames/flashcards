@@ -127,7 +127,7 @@ export default function GroupPage() {
           else throw new Error("Failed to fetch user details");
         })
         .then((data) => {
-          setCreator(data[0]); // Assuming data is an array
+          setCreator(data[0]);
         })
         .catch((err) => {
           console.error(err);
@@ -374,7 +374,7 @@ export default function GroupPage() {
                 {group.group_name}
               </Typography>
               <Typography variant="body1">
-                Created by {creator ? creator.username : "Loading..."} on{" "}
+                {creator ? "Created by " + creator.username : "Loading..."} on{" "}
                 {new Date(group.time_created).toLocaleString()}
               </Typography>
             </>
@@ -541,7 +541,6 @@ export default function GroupPage() {
             )}
           </DialogContent>
 
-          {/* FIXME: Delete button should be left-aligned */}
           <DialogActions sx={{ align: "left" }}>
             <Button
               onClick={handleDeleteCard}
