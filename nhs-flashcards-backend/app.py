@@ -63,7 +63,7 @@ app.add_url_rule("/refresh", view_func=user_endpoints.refresh_token, methods=['P
 # app.add_url_rule("/logout", view_func=user_endpoints.logout, methods=['POST']) # TODO: Implement serverside logout & token revocation
 app.add_url_rule("/protected", view_func=user_endpoints.protected, methods=['GET'])
 app.add_url_rule("/user/groups", view_func=user_endpoints.get_user_groups, methods=['GET'])
-app.add_url_rule("/user-details", view_func=user_endpoints.get_user_details, methods=['POST'])
+app.add_url_rule("/user/details", view_func=user_endpoints.get_user_details, methods=['POST'])
 
 
 ### CARD ENDPOINTS ###

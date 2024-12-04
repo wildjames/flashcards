@@ -103,7 +103,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetchGroups();
-  }, [fetchGroups]);
+  }, [fetchGroups, authContext]);
 
   // When the groups are loaded, fetch the user details corresponding to the creator_id
   useEffect(() => {
@@ -113,7 +113,7 @@ export default function DashboardPage() {
       // Remove duplicates
       const uniqueCreatorIds = Array.from(new Set(creatorIds));
 
-      fetch("/api/user-details", {
+      fetch("/api/user/details", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -137,7 +137,7 @@ export default function DashboardPage() {
           console.error(err);
         });
     }
-  }, [groups]);
+  }, [groups, authContext]);
 
   const handleCardClick = (groupId: string) => {
     router.push(`/groups/${groupId}`);
@@ -195,23 +195,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* <Toolbar>
-          <Typography
-            variant="h6"
-            sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}
-          >
-            Group Management
-            <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
-              <DashboardButton />
-              <LogoutButton />
-            </Box>
-          </Typography>
-          <Button color="inherit" onClick={() => setOpenDialog(true)}>
-            Create Card
-          </Button>
-        </Toolbar>
-      </AppBar> */}
-
       <AppBar position="static">
         <Toolbar>
           <Typography

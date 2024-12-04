@@ -241,6 +241,30 @@ Retrieve groups the authenticated user is subscribed to.
     ]
     ```
 
+#### Get User Details
+
+Retrieve information about a user
+
+- **URL:** `/user/details`
+- **Method:** `GET`
+- **Headers:**
+
+  ```
+  Authorization: Bearer <access_token>
+  ```
+
+- **Responses:**
+
+  - **200 OK**
+
+    ```json
+    {
+      "username": "Username",
+      "email": "user@email.com",
+      "user_id": "uuid"
+    }
+    ```
+
 ### Card Endpoints
 
 #### Create Card
@@ -400,7 +424,7 @@ Update an existing card.
   ```json
   {
     "question": "Updated question",
-    "correct_answer": "Updated answer",
+    "correct_answer": "Updated answer"
   }
   ```
 
@@ -469,6 +493,36 @@ Delete a card.
     ```json
     {
       "message": "Card not found"
+    }
+    ```
+
+#### Flashcard
+
+Retrieve a random card, including an incorrect answer. Pulls from all groups subscribed to by the user
+
+- **URL:** `/cards/flashcard`
+- **Method:** `GET`
+- **Headers:**
+
+  ```
+  Authorization: Bearer <access_token>
+  ```
+
+- **Responses:**
+
+  - **200 OK**
+
+    ```json
+    {
+      "card_id": "uuid",
+      "question": "Question text",
+      "correct_answer": "Correct answer",
+      "incorrect_answer": "Incorrect answer",
+      "group_id": "uuid",
+      "creator_id": "uuid",
+      "time_created": "timestamp",
+      "time_updated": "timestamp",
+      "updated_by_id": "uuid"
     }
     ```
 
@@ -661,6 +715,10 @@ Subscribe the authenticated user to a group.
       "message": "Group not found"
     }
     ```
+
+#### Get group information
+
+#### Get all cards in a group
 
 ### Protected Route Example
 

@@ -1,5 +1,18 @@
 "use client";
 
+// FIXME: This needs to be broken down into smaller components!!!
+// I think:
+// - GroupDetails
+// - GroupCardsTable
+// - EditCardDialog
+// - DeleteGroupDialog (ask the user for confirmation!!)
+// - BulkImportDialog
+// - BulkImportReviewTable
+// - BulkImportReviewDialog
+
+// There are also a lot of repeated code snippets that can be extracted into functions.
+// Not my best work, but it's a start!
+
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -8,9 +21,6 @@ import {
   Typography,
   Container,
   Box,
-  Card,
-  CardActionArea,
-  CardContent,
   CircularProgress,
   Button,
   Dialog,
@@ -19,10 +29,16 @@ import {
   TextField,
   DialogActions,
   Fab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-import Grid from "@mui/material/Grid2";
 
 import { AuthContext } from "@/context/AuthContext";
 import LogoutButton from "@/app/components/LogoutButton";
@@ -63,15 +79,15 @@ export default function GroupPage() {
   const [group, setGroup] = useState<GroupData | null>(null);
   const [creator, setCreator] = useState<UserData | null>(null);
   const [loadingCards, setLoadingCards] = useState(true);
+  const [displayLoadingCards, setDisplayLoadingCards] = useState(true);
   const [cardsError, setCardsError] = useState("");
   const [cards, setCards] = useState<CardData[]>([]);
-  const [openDialog, setOpenDialog] = useState(false);
 
   // For creating new cards
   const [newQuestion, setNewQuestion] = useState("");
   const [newCorrectAnswer, setNewCorrectAnswer] = useState("");
   const [creatingCard, setCreatingCard] = useState(false);
-  const [createCardError, setCreateCardError] = useState("");
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
 
   // For editing cards
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -84,6 +100,10 @@ export default function GroupPage() {
   // For deleting cards
   const [deletingCard, setDeletingCard] = useState(false);
   const [deleteCardError, setDeleteCardError] = useState("");
+
+  // For bulk import of card data
+  const [openBulkDialog, setOpenBulkDialog] = useState(false);
+  const [bulkData, setBulkData] = useState("");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -110,7 +130,7 @@ export default function GroupPage() {
           setGroup(data);
           setLoadingGroup(false);
           // Fetch creator details
-          return fetch("/api/user-details", {
+          return fetch("/api/user/details", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -136,6 +156,15 @@ export default function GroupPage() {
       setLoadingGroup(false);
     }
   }, [groupId]);
+
+  // If loadingCards is true for more than 1 second, display the loading spinner
+  // This is to prevent the spinner from flashing on the screen for very short loading times
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDisplayLoadingCards(loadingCards);
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [loadingCards]);
 
   // Delete group
   const handleDeleteGroup = () => {
@@ -164,6 +193,7 @@ export default function GroupPage() {
   };
 
   // Fetch cards for the group
+  // Make this a callback function so that it can be called from places other than useEffect
   const fetchCards = useCallback(() => {
     setLoadingCards(true);
     console.log("Fetching cards for group", groupId);
@@ -193,16 +223,34 @@ export default function GroupPage() {
     }
   }, [groupId]);
 
+  // Fetch cards when the group ID changes (this should only happen on page load)
   useEffect(() => {
     fetchCards();
-  }, [fetchCards, groupId]);
+  }, [fetchCards, groupId, authContext]);
 
+  // Create a new card.
+  // When the creation is done, focus the question input in the table
+  // If the user has not filled in one of the things, focus that input
   const handleCreateCard = () => {
     setCreatingCard(true);
-    setCreateCardError("");
     const accessToken = localStorage.getItem("access_token");
+
+    // Focus the first empty input
     if (!newQuestion.trim() || !newCorrectAnswer.trim()) {
-      setCreateCardError("All fields are required");
+      if (openCreateDialog) {
+        if (!newQuestion.trim()) {
+          document.getElementById("dialog-question")?.focus();
+        } else if (!newCorrectAnswer.trim()) {
+          document.getElementById("dialog-correct_answer")?.focus();
+        }
+      } else {
+        if (!newQuestion.trim()) {
+          document.getElementById("table-question")?.focus();
+        } else if (!newCorrectAnswer.trim()) {
+          document.getElementById("table-correct_answer")?.focus();
+        }
+      }
+
       setCreatingCard(false);
       return;
     }
@@ -230,7 +278,6 @@ export default function GroupPage() {
         })
         .catch((err) => {
           console.error(err);
-          setCreateCardError(err.message);
           setCreatingCard(false);
         });
     } else {
@@ -238,9 +285,43 @@ export default function GroupPage() {
     }
     console.log("Card created");
     setCreatingCard(false);
-    setOpenDialog(false);
+    setOpenCreateDialog(false);
+
+    // focus the create card question input from the table
+    document.getElementById("table-question")?.focus();
   };
 
+  const handleOpenBulkDialog = () => setOpenBulkDialog(true);
+  const handleCloseBulkDialog = () => {
+    setOpenBulkDialog(false);
+    setBulkData("");
+  };
+
+  const handleCreateBulkCards = (
+    cards: Array<{ question: string; correct_answer: string }>
+  ) => {
+    console.log("Creating bulk cards", cards);
+  };
+
+  const handleBulkSubmit = () => {
+    console.log("Bulk submit", bulkData);
+    try {
+      // Parse the CSV data
+      const rows = bulkData.split("\n").map((row) => row.split("\t"));
+      console.log(rows);
+      const parsedCards = rows.map(([question, correct_answer]) => ({
+        question: question.trim(),
+        correct_answer: correct_answer.trim(),
+      }));
+      // Pass the parsed data to the handleCreateBulkCards function
+      handleCreateBulkCards(parsedCards);
+      handleCloseBulkDialog();
+    } catch (error) {
+      console.error("Failed to parse CSV data:", error);
+    }
+  };
+
+  // Clicking on a card row opens the edit dialog (there is also a button)
   const handleCardClick = (card: CardData) => {
     setEditCard(card);
     setEditQuestion(card.question);
@@ -248,16 +329,25 @@ export default function GroupPage() {
     setOpenEditDialog(true);
   };
 
+  // Update a card. Simple dialog.
   const handleUpdateCard = () => {
     if (!editCard) return;
     setUpdatingCard(true);
     setUpdateCardError("");
     const accessToken = localStorage.getItem("access_token");
+
     if (!editQuestion.trim() || !editCorrectAnswer.trim()) {
       setUpdateCardError("All fields are required");
       setUpdatingCard(false);
       return;
     }
+
+    if (!editQuestion.trim()) {
+      document.getElementById("dialog-question")?.focus();
+    } else if (!editCorrectAnswer.trim()) {
+      document.getElementById("dialog-correct_answer")?.focus();
+    }
+
     if (accessToken) {
       fetch(`/api/cards/${editCard.card_id}`, {
         method: "PUT",
@@ -324,6 +414,12 @@ export default function GroupPage() {
     }
   };
 
+  const handleCreateEnter = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleCreateCard();
+    }
+  };
+
   return (
     <>
       <AppBar position="static">
@@ -365,18 +461,31 @@ export default function GroupPage() {
           ) : null}
         </Box>
 
-        <Fab
-          variant="extended"
+        {/* <Fab
+          // FIXME: Should be round for small screens and extended for larger screens
           color="primary"
           aria-label="add"
           sx={{ position: "fixed", bottom: 20, right: 30 }}
+          variant="extended"
           onClick={() => setOpenDialog(true)}
         >
           <AddIcon sx={{ mr: 1 }} />
           Create Card
+        </Fab> */}
+
+        <Fab
+          color="primary"
+          aria-label="Add Bulk"
+          sx={{ position: "fixed", bottom: 20, right: 30 }}
+          variant="extended"
+          onClick={handleOpenBulkDialog}
+        >
+          <AddIcon sx={{ mr: 1 }} />
+          Bulk Import
         </Fab>
 
         <Fab
+          // FIXME: Should be round for small screens and extended for larger screens
           variant="extended"
           color="secondary"
           aria-label="delete"
@@ -387,9 +496,17 @@ export default function GroupPage() {
           Delete Group
         </Fab>
 
-        {/* Cards */}
-        <Box sx={{ mt: 4 }}>
-          {loadingCards ? (
+        {/* Cards table */}
+        <Box
+          sx={{
+            mt: 4,
+            // FIXME: This breaks the layout on small screens, when the group name and creator name are long.
+            // They wrap around, and push the table down!
+            maxHeight: "calc(100vh - 300px)",
+            overflow: "auto",
+          }}
+        >
+          {displayLoadingCards ? (
             <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
               <CircularProgress />
             </Box>
@@ -397,53 +514,134 @@ export default function GroupPage() {
             <Typography color="error" variant="body1">
               {cardsError}
             </Typography>
-          ) : cards.length > 0 ? (
-            <Grid container spacing={3}>
-              {cards.map((card: CardData) => (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={card.card_id}>
-                  <Card>
-                    <CardActionArea onClick={() => handleCardClick(card)}>
-                      <CardContent>
-                        <Typography variant="h6" component="div">
-                          {card.question}
-                        </Typography>
-                        {/* Additional card details can be added here */}
-                        {/* Could have the answer, but that's spoilers I guess */}
-                      </CardContent>
-                    </CardActionArea>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
           ) : (
-            <Typography variant="body1">No cards in this group.</Typography>
+            <TableContainer component={Paper}>
+              <Table stickyHeader aria-label="group cards table">
+                <TableHead>
+                  <TableRow
+                    key="new-card"
+                    hover
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    <TableCell>
+                      <TextField
+                        margin="dense"
+                        id="table-question"
+                        label="Question"
+                        type="text"
+                        fullWidth
+                        variant="standard"
+                        value={newQuestion}
+                        onChange={(e) => setNewQuestion(e.target.value)}
+                        onKeyDown={handleCreateEnter}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <TextField
+                        margin="dense"
+                        id="table-correct_answer"
+                        label="Correct Answer"
+                        type="text"
+                        fullWidth
+                        variant="standard"
+                        value={newCorrectAnswer}
+                        onChange={(e) => setNewCorrectAnswer(e.target.value)}
+                        onKeyDown={handleCreateEnter}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        onClick={handleCreateCard}
+                        disabled={creatingCard}
+                      >
+                        {creatingCard ? "Creating..." : "Create"}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cards.map((card) => (
+                    <TableRow
+                      key={card.card_id}
+                      hover
+                      sx={{
+                        "&:last-child td, &:last-child th": { border: 0 },
+                        cursor: "pointer",
+                      }}
+                      onClick={() => handleCardClick(card)}
+                    >
+                      <TableCell>{card.question}</TableCell>
+                      <TableCell>{card.correct_answer}</TableCell>
+                      <TableCell>
+                        <Button onClick={() => handleCardClick(card)}>
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </Box>
 
+        {/* Bulk Import Dialog */}
+        {/* FIXME: This dialog needs to expand to fill more of the screen, and the text should scroll if needed. */}
+        {/*
+          Submission should open a new dialog, which contains a table that has the newly imported cards.
+          Then the user should be able to review them before creation.
+        */}
+        <Dialog open={openBulkDialog} onClose={handleCloseBulkDialog} fullWidth>
+          <DialogTitle>Bulk Add Cards</DialogTitle>
+          <DialogContent>
+            <TextField
+              id="bulk-input"
+              label="Paste CSV Data"
+              multiline
+              rows={8}
+              fullWidth
+              variant="outlined"
+              placeholder="Question,Correct Answer&#10;What is 2+2?,4"
+              value={bulkData}
+              onChange={(e) => setBulkData(e.target.value)}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseBulkDialog} color="secondary">
+              Cancel
+            </Button>
+            <Button onClick={handleBulkSubmit} color="primary">
+              Submit
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         {/* Card Creation Dialog */}
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+        {/* <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
           <DialogTitle>Create New Card</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
               margin="dense"
-              id="question"
+              id="dialog-question"
               label="Question"
               type="text"
               fullWidth
               variant="standard"
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
+              onKeyDown={handleCreateEnter}
             />
             <TextField
               margin="dense"
-              id="correct_answer"
+              id="dialog-correct_answer"
               label="Correct Answer"
               type="text"
               fullWidth
               variant="standard"
               value={newCorrectAnswer}
               onChange={(e) => setNewCorrectAnswer(e.target.value)}
+              onKeyDown={handleCreateEnter}
             />
             {createCardError && (
               <Typography color="error" variant="body2" sx={{ mt: 1 }}>
@@ -459,23 +657,24 @@ export default function GroupPage() {
               Cancel
             </Button>
             <Button
-              id="create_button"
+              id="dialog-create_button"
               onClick={handleCreateCard}
               disabled={creatingCard}
             >
               {creatingCard ? "Creating..." : "Create"}
             </Button>
           </DialogActions>
-        </Dialog>
+        </Dialog> */}
 
         {/* Card Edit Dialog */}
+        {/* FIXME: This needs to be larger, and have word wrapping for cards with long fields. */}
         <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
           <DialogTitle>Edit Card</DialogTitle>
           <DialogContent>
             <TextField
               autoFocus
               margin="dense"
-              id="edit_question"
+              id="dialog-edit_question"
               label="Question"
               type="text"
               fullWidth
@@ -485,7 +684,7 @@ export default function GroupPage() {
             />
             <TextField
               margin="dense"
-              id="edit_correct_answer"
+              id="dialog-edit_correct_answer"
               label="Correct Answer"
               type="text"
               fullWidth
