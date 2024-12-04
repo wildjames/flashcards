@@ -36,6 +36,9 @@ import {
   TableHead,
   TableRow,
   Paper,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -104,6 +107,7 @@ export default function GroupPage() {
   // For bulk import of card data
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
   const [bulkData, setBulkData] = useState("");
+  const [bulkImportFormat, setBulkImportFormat] = useState("");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -301,18 +305,57 @@ export default function GroupPage() {
     cards: Array<{ question: string; correct_answer: string }>
   ) => {
     console.log("Creating bulk cards", cards);
+    // TODO: Implement bulk card creation (need a new backend endpoint)
+  };
+
+  const parseCSV = (data: string) => {
+    // Parse the incoming data based on the selected input format
+    let rows: string[][] = [];
+
+    if (bulkImportFormat === "json") {
+      const parsedData = JSON.parse(data);
+      // Check that this data is an array, and each element is an object with question and correct_answer keys
+      if (!Array.isArray(parsedData)) {
+        throw new Error("JSON data must be an array");
+      }
+      if (
+        !parsedData.every(
+          (el) =>
+            typeof el === "object" && "question" in el && "correct_answer" in el
+        )
+      ) {
+        throw new Error(
+          "JSON data must be an array of objects with question and correct_answer keys"
+        );
+      }
+      return JSON.parse(data);
+    }
+
+    switch (bulkImportFormat) {
+      case "csv":
+        rows = data.split("\n").map((row) => row.split(","));
+        break;
+      case "confluence":
+        console.log("Confluence format not supported yet");
+        break;
+      case "tabbed":
+        rows = data.split("\n").map((row) => row.split("\t"));
+        break;
+      default:
+        throw new Error(`Unsupported format: ${bulkImportFormat}`);
+    }
+
+    return rows.map(([question, correct_answer]) => ({
+      question: question.trim(),
+      correct_answer: correct_answer.trim(),
+    }));
   };
 
   const handleBulkSubmit = () => {
     console.log("Bulk submit", bulkData);
     try {
-      // Parse the CSV data
-      const rows = bulkData.split("\n").map((row) => row.split("\t"));
-      console.log(rows);
-      const parsedCards = rows.map(([question, correct_answer]) => ({
-        question: question.trim(),
-        correct_answer: correct_answer.trim(),
-      }));
+      // Parse the incoming data, based on the selected input format
+      const parsedCards = parseCSV(bulkData);
       // Pass the parsed data to the handleCreateBulkCards function
       handleCreateBulkCards(parsedCards);
       handleCloseBulkDialog();
@@ -594,6 +637,21 @@ export default function GroupPage() {
         <Dialog open={openBulkDialog} onClose={handleCloseBulkDialog} fullWidth>
           <DialogTitle>Bulk Add Cards</DialogTitle>
           <DialogContent>
+            {/* Dropdown box with import format in it */}
+            <InputLabel id="bulk-import-format">Import Format</InputLabel>
+            <Select
+              labelId="bulk-import-format"
+              id="bulk-import-format-select"
+              value={bulkImportFormat}
+              label="Import Format"
+              sx={{ width: "10em", margin: "0 0 1em 0" }}
+              onChange={(e) => setBulkImportFormat(e.target.value)}
+            >
+              <MenuItem value="csv">CSV</MenuItem>
+              <MenuItem value="tabbed">Tabbed</MenuItem>
+              <MenuItem value="confluence">Confluence</MenuItem>
+              <MenuItem value="json">JSON</MenuItem>
+            </Select>
             <TextField
               id="bulk-input"
               label="Paste CSV Data"
