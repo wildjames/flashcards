@@ -24,6 +24,7 @@ interface FlipCardProps {
   correct: string;
 }
 
+// TODO: This should be a reusable component
 const FlipCard = styled(Box)<FlipCardProps>(
   ({ theme, isflipped, correct }) => ({
     // perspective: "1000px", // Doesn't really have much effect
@@ -204,25 +205,68 @@ export default function FlashcardPage() {
                 <Typography variant="h5">{card.question}</Typography>
               </CardContent>
             </Card>
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "stretch", // Ensures all cards grow equally
+                gap: 2, // Add spacing between cards if needed
+              }}
+            >
               {options.map((option, index) => (
                 <FlipCard
                   key={index}
                   isflipped={(flippedCard === index).toString()}
                   correct={(index === correctAnswerIndex).toString()}
                   onClick={() => handleAnswerClick(index)}
+                  sx={{
+                    flex: 1, // Ensures equal growth
+                  }}
                 >
-                  <Box className="front">
-                    <Typography>{option}</Typography>
+                  <Box
+                    className="front"
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      overflow: "hidden", // Ensure no overflow by default
+                      maxHeight: "600px", // Set a max height for consistent sizing
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        overflowY: "auto", // Add scroll for overflow
+                        textAlign: "center",
+                      }}
+                    >
+                      {option}
+                    </Typography>
                   </Box>
-                  <Box className="back">
-                    <Typography>
+                  <Box
+                    className="back"
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      overflow: "hidden", // Ensure no overflow by default
+                      maxHeight: "600px", // Set a max height for consistent sizing
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        overflowY: "auto", // Add scroll for overflow
+                        textAlign: "center",
+                      }}
+                    >
                       {index === correctAnswerIndex ? "Correct!" : "Incorrect"}
                     </Typography>
                   </Box>
                 </FlipCard>
               ))}
             </Box>
+
             {flippedCard !== null && (
               <Button
                 variant="contained"
