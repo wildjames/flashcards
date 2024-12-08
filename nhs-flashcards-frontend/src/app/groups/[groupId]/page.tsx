@@ -46,6 +46,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { AuthContext } from "@/context/AuthContext";
 import LogoutButton from "@/app/components/LogoutButton";
 import DashboardButton from "@/app/components/DashboardButton";
+import CardEditDialog from "@/app/components/CardEditDialog";
+import { CardEditDialogProps } from "@/app/components/CardEditDialog";
 
 type GroupData = {
   group_id: string;
@@ -95,14 +97,6 @@ export default function GroupPage() {
   // For editing cards
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [editCard, setEditCard] = useState<CardData | null>(null);
-  const [editQuestion, setEditQuestion] = useState("");
-  const [editCorrectAnswer, setEditCorrectAnswer] = useState("");
-  const [updatingCard, setUpdatingCard] = useState(false);
-  const [updateCardError, setUpdateCardError] = useState("");
-
-  // For deleting cards
-  const [deletingCard, setDeletingCard] = useState(false);
-  const [deleteCardError, setDeleteCardError] = useState("");
 
   // For bulk import of card data
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
@@ -367,100 +361,20 @@ export default function GroupPage() {
   // Clicking on a card row opens the edit dialog (there is also a button)
   const handleCardClick = (card: CardData) => {
     setEditCard(card);
-    setEditQuestion(card.question);
-    setEditCorrectAnswer(card.correct_answer);
     setOpenEditDialog(true);
-  };
-
-  // Update a card. Simple dialog.
-  const handleUpdateCard = () => {
-    if (!editCard) return;
-    setUpdatingCard(true);
-    setUpdateCardError("");
-    const accessToken = localStorage.getItem("access_token");
-
-    if (!editQuestion.trim() || !editCorrectAnswer.trim()) {
-      setUpdateCardError("All fields are required");
-      setUpdatingCard(false);
-      return;
-    }
-
-    if (!editQuestion.trim()) {
-      document.getElementById("dialog-question")?.focus();
-    } else if (!editCorrectAnswer.trim()) {
-      document.getElementById("dialog-correct_answer")?.focus();
-    }
-
-    if (accessToken) {
-      fetch(`/api/cards/${editCard.card_id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          question: editQuestion,
-          correct_answer: editCorrectAnswer,
-        }),
-      })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else throw new Error("Failed to update card");
-        })
-        .then(() => {
-          fetchCards();
-          setEditQuestion("");
-          setEditCorrectAnswer("");
-          setUpdatingCard(false);
-          setOpenEditDialog(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          setUpdateCardError(err.message);
-          setUpdatingCard(false);
-        });
-    } else {
-      setUpdateCardError("Authentication Error");
-      setUpdatingCard(false);
-    }
-  };
-
-  const handleDeleteCard = () => {
-    if (!editCard) return;
-    setDeletingCard(true);
-    setDeleteCardError("");
-    const accessToken = localStorage.getItem("access_token");
-    if (accessToken) {
-      fetch(`/api/cards/${editCard.card_id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((response) => {
-          if (response.ok) {
-            fetchCards();
-            setDeletingCard(false);
-            setOpenEditDialog(false);
-          } else {
-            throw new Error("Failed to delete card");
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          setDeleteCardError(err.message);
-          setDeletingCard(false);
-        });
-    } else {
-      setDeleteCardError("Authentication Error");
-      setDeletingCard(false);
-    }
   };
 
   const handleCreateEnter = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleCreateCard();
     }
+  };
+
+  const cardEditProps: CardEditDialogProps = {
+    openEditDialog,
+    setOpenEditDialog,
+    editCard,
+    fetchCards,
   };
 
   return (
@@ -503,18 +417,6 @@ export default function GroupPage() {
             </>
           ) : null}
         </Box>
-
-        {/* <Fab
-          // FIXME: Should be round for small screens and extended for larger screens
-          color="primary"
-          aria-label="add"
-          sx={{ position: "fixed", bottom: 20, right: 30 }}
-          variant="extended"
-          onClick={() => setOpenDialog(true)}
-        >
-          <AddIcon sx={{ mr: 1 }} />
-          Create Card
-        </Fab> */}
 
         <Fab
           color="primary"
@@ -674,115 +576,8 @@ export default function GroupPage() {
           </DialogActions>
         </Dialog>
 
-        {/* Card Creation Dialog */}
-        {/* <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Create New Card</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="dialog-question"
-              label="Question"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={newQuestion}
-              onChange={(e) => setNewQuestion(e.target.value)}
-              onKeyDown={handleCreateEnter}
-            />
-            <TextField
-              margin="dense"
-              id="dialog-correct_answer"
-              label="Correct Answer"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={newCorrectAnswer}
-              onChange={(e) => setNewCorrectAnswer(e.target.value)}
-              onKeyDown={handleCreateEnter}
-            />
-            {createCardError && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                {createCardError}
-              </Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenDialog(false)}
-              disabled={creatingCard}
-            >
-              Cancel
-            </Button>
-            <Button
-              id="dialog-create_button"
-              onClick={handleCreateCard}
-              disabled={creatingCard}
-            >
-              {creatingCard ? "Creating..." : "Create"}
-            </Button>
-          </DialogActions>
-        </Dialog> */}
-
         {/* Card Edit Dialog */}
-        {/* FIXME: This needs to be larger, and have word wrapping for cards with long fields. */}
-        <Dialog open={openEditDialog} onClose={() => setOpenEditDialog(false)}>
-          <DialogTitle>Edit Card</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="dialog-edit_question"
-              label="Question"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={editQuestion}
-              onChange={(e) => setEditQuestion(e.target.value)}
-            />
-            <TextField
-              margin="dense"
-              id="dialog-edit_correct_answer"
-              label="Correct Answer"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={editCorrectAnswer}
-              onChange={(e) => setEditCorrectAnswer(e.target.value)}
-            />
-            {updateCardError && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                {updateCardError}
-              </Typography>
-            )}
-            {deleteCardError && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                {deleteCardError}
-              </Typography>
-            )}
-          </DialogContent>
-
-          <DialogActions sx={{ align: "left" }}>
-            <Button
-              onClick={handleDeleteCard}
-              disabled={deletingCard}
-              color="error"
-            >
-              {deletingCard ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogActions>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenEditDialog(false)}
-              disabled={updatingCard}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateCard} disabled={updatingCard}>
-              {updatingCard ? "Updating..." : "Update"}
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <CardEditDialog {...cardEditProps} />
       </Container>
     </>
   );
