@@ -23,11 +23,7 @@ import {
   Box,
   CircularProgress,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
   TextField,
-  DialogActions,
   Fab,
   Table,
   TableBody,
@@ -36,9 +32,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -48,6 +41,7 @@ import LogoutButton from "@/app/components/LogoutButton";
 import DashboardButton from "@/app/components/DashboardButton";
 import CardEditDialog from "@/app/components/CardEditDialog";
 import { CardEditDialogProps } from "@/app/components/CardEditDialog";
+import BulkImportDialog from "@/app/components/BulkImportDialog";
 
 type GroupData = {
   group_id: string;
@@ -92,7 +86,6 @@ export default function GroupPage() {
   const [newQuestion, setNewQuestion] = useState("");
   const [newCorrectAnswer, setNewCorrectAnswer] = useState("");
   const [creatingCard, setCreatingCard] = useState(false);
-  const [openCreateDialog, setOpenCreateDialog] = useState(false);
 
   // For editing cards
   const [openEditDialog, setOpenEditDialog] = useState(false);
@@ -100,8 +93,6 @@ export default function GroupPage() {
 
   // For bulk import of card data
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
-  const [bulkData, setBulkData] = useState("");
-  const [bulkImportFormat, setBulkImportFormat] = useState("");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -235,23 +226,15 @@ export default function GroupPage() {
 
     // Focus the first empty input
     if (!newQuestion.trim() || !newCorrectAnswer.trim()) {
-      if (openCreateDialog) {
-        if (!newQuestion.trim()) {
-          document.getElementById("dialog-question")?.focus();
-        } else if (!newCorrectAnswer.trim()) {
-          document.getElementById("dialog-correct_answer")?.focus();
-        }
-      } else {
-        if (!newQuestion.trim()) {
-          document.getElementById("table-question")?.focus();
-        } else if (!newCorrectAnswer.trim()) {
-          document.getElementById("table-correct_answer")?.focus();
-        }
+      if (!newQuestion.trim()) {
+        document.getElementById("table-question")?.focus();
+      } else if (!newCorrectAnswer.trim()) {
+        document.getElementById("table-correct_answer")?.focus();
       }
-
       setCreatingCard(false);
       return;
     }
+
     if (accessToken) {
       fetch("/api/cards", {
         method: "POST",
@@ -281,84 +264,27 @@ export default function GroupPage() {
     } else {
       console.error("Authentication Error");
     }
+
     console.log("Card created");
     setCreatingCard(false);
-    setOpenCreateDialog(false);
 
-    // focus the create card question input from the table
+    // refocus the question input
     document.getElementById("table-question")?.focus();
   };
 
   const handleOpenBulkDialog = () => setOpenBulkDialog(true);
-  const handleCloseBulkDialog = () => {
-    setOpenBulkDialog(false);
-    setBulkData("");
-  };
+  const handleCloseBulkDialog = () => setOpenBulkDialog(false);
 
   const handleCreateBulkCards = (
     cards: Array<{ question: string; correct_answer: string }>
   ) => {
-    console.log("Creating bulk cards", cards);
     // TODO: Implement bulk card creation (need a new backend endpoint)
+    console.log("Creating bulk cards", cards);
+    // After successful creation, re-fetchCards
+    fetchCards();
   };
 
-  const parseCSV = (data: string) => {
-    // Parse the incoming data based on the selected input format
-    let rows: string[][] = [];
-
-    if (bulkImportFormat === "json") {
-      const parsedData = JSON.parse(data);
-      // Check that this data is an array, and each element is an object with question and correct_answer keys
-      if (!Array.isArray(parsedData)) {
-        throw new Error("JSON data must be an array");
-      }
-      if (
-        !parsedData.every(
-          (el) =>
-            typeof el === "object" && "question" in el && "correct_answer" in el
-        )
-      ) {
-        throw new Error(
-          "JSON data must be an array of objects with question and correct_answer keys"
-        );
-      }
-      return JSON.parse(data);
-    }
-
-    switch (bulkImportFormat) {
-      case "csv":
-        rows = data.split("\n").map((row) => row.split(","));
-        break;
-      case "confluence":
-        console.log("Confluence format not supported yet");
-        break;
-      case "tabbed":
-        rows = data.split("\n").map((row) => row.split("\t"));
-        break;
-      default:
-        throw new Error(`Unsupported format: ${bulkImportFormat}`);
-    }
-
-    return rows.map(([question, correct_answer]) => ({
-      question: question.trim(),
-      correct_answer: correct_answer.trim(),
-    }));
-  };
-
-  const handleBulkSubmit = () => {
-    console.log("Bulk submit", bulkData);
-    try {
-      // Parse the incoming data, based on the selected input format
-      const parsedCards = parseCSV(bulkData);
-      // Pass the parsed data to the handleCreateBulkCards function
-      handleCreateBulkCards(parsedCards);
-      handleCloseBulkDialog();
-    } catch (error) {
-      console.error("Failed to parse CSV data:", error);
-    }
-  };
-
-  // Clicking on a card row opens the edit dialog (there is also a button)
+  // Clicking on a card row opens the edit dialog
   const handleCardClick = (card: CardData) => {
     setEditCard(card);
     setOpenEditDialog(true);
@@ -435,13 +361,13 @@ export default function GroupPage() {
           color="secondary"
           aria-label="delete"
           sx={{ position: "fixed", bottom: 20, left: 30 }}
-          onClick={() => handleDeleteGroup()}
+          onClick={handleDeleteGroup}
         >
           <DeleteIcon sx={{ mr: 1 }} />
           Delete Group
         </Fab>
 
-        {/* Cards table */}
+        {/* Cards Table */}
         <Box
           sx={{
             mt: 4,
@@ -531,50 +457,11 @@ export default function GroupPage() {
         </Box>
 
         {/* Bulk Import Dialog */}
-        {/* FIXME: This dialog needs to expand to fill more of the screen, and the text should scroll if needed. */}
-        {/*
-          Submission should open a new dialog, which contains a table that has the newly imported cards.
-          Then the user should be able to review them before creation.
-        */}
-        <Dialog open={openBulkDialog} onClose={handleCloseBulkDialog} fullWidth>
-          <DialogTitle>Bulk Add Cards</DialogTitle>
-          <DialogContent>
-            {/* Dropdown box with import format in it */}
-            <InputLabel id="bulk-import-format">Import Format</InputLabel>
-            <Select
-              labelId="bulk-import-format"
-              id="bulk-import-format-select"
-              value={bulkImportFormat}
-              label="Import Format"
-              sx={{ width: "10em", margin: "0 0 1em 0" }}
-              onChange={(e) => setBulkImportFormat(e.target.value)}
-            >
-              <MenuItem value="csv">CSV</MenuItem>
-              <MenuItem value="tabbed">Tabbed</MenuItem>
-              <MenuItem value="confluence">Confluence</MenuItem>
-              <MenuItem value="json">JSON</MenuItem>
-            </Select>
-            <TextField
-              id="bulk-input"
-              label="Paste CSV Data"
-              multiline
-              rows={8}
-              fullWidth
-              variant="outlined"
-              placeholder="Question,Correct Answer&#10;What is 2+2?,4"
-              value={bulkData}
-              onChange={(e) => setBulkData(e.target.value)}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseBulkDialog} color="secondary">
-              Cancel
-            </Button>
-            <Button onClick={handleBulkSubmit} color="primary">
-              Submit
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <BulkImportDialog
+          open={openBulkDialog}
+          onClose={handleCloseBulkDialog}
+          onSubmit={handleCreateBulkCards}
+        />
 
         {/* Card Edit Dialog */}
         <CardEditDialog {...cardEditProps} />
