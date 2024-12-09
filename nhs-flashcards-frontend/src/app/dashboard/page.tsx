@@ -2,8 +2,6 @@
 
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthContext } from "@/context/AuthContext";
-import LogoutButton from "../components/LogoutButton";
 import {
   AppBar,
   Toolbar,
@@ -25,6 +23,10 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import BoltIcon from "@mui/icons-material/Bolt";
 import Grid from "@mui/material/Grid2";
+
+import { AuthContext } from "@/context/AuthContext";
+import LogoutButton from "@components/LogoutButton";
+import axiosInstance from "@/axios/axiosInstance";
 
 type GroupData = {
   group_id: string;
@@ -50,8 +52,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   // For displaying user groups
-  const [groups, setGroups] = useState([]);
-  const [userIdMapping, setUserIdMapping] = useState({} as UserIdMapping);
+  const [groups, setGroups] = useState<GroupData[]>([]);
+  const [userIdMapping, setUserIdMapping] = useState<UserIdMapping>({});
   // For creating new groups
   const [openDialog, setOpenDialog] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
@@ -66,38 +68,19 @@ export default function DashboardPage() {
     }
   }, [authContext, router]);
 
-  const fetchGroups = useCallback(() => {
+  const fetchGroups = useCallback(async () => {
     setLoading(true);
     setError("");
-    const accessToken = localStorage.getItem("access_token");
 
-    if (accessToken) {
-      fetch("/api/user/groups", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else if (response.status === 401 || response.status === 403) {
-            throw new Error("Unauthorized");
-          } else {
-            throw new Error("Failed to fetch groups");
-          }
-        })
-        .then((data) => {
-          setGroups(data);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          setError(err.message);
-          setLoading(false);
-        });
-    } else {
-      console.log("Failed to fetch groups: User is not authenticated");
+    try {
+      const response = await axiosInstance.get("/user/groups");
+      setGroups(response.data);
+      setError("");
+    } catch (err) {
+      console.error(err);
+      setError("Failed to fetch groups");
+    } finally {
       setLoading(false);
-      setError("Authentication Error");
     }
   }, []);
 
@@ -107,46 +90,40 @@ export default function DashboardPage() {
 
   // When the groups are loaded, fetch the user details corresponding to the creator_id
   useEffect(() => {
-    if (groups.length > 0) {
-      const creatorIds = groups.map((group: GroupData) => group.creator_id);
+    const fetchUserDetails = async () => {
+      if (groups.length > 0) {
+        const creatorIds = groups.map((group: GroupData) => group.creator_id);
 
-      // Remove duplicates
-      const uniqueCreatorIds = Array.from(new Set(creatorIds));
+        // Remove duplicates
+        const uniqueCreatorIds = Array.from(new Set(creatorIds));
 
-      fetch("/api/user/details", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        body: JSON.stringify({ user_ids: uniqueCreatorIds }),
-      })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else throw new Error("Failed to fetch user details");
-        })
-        .then((data) => {
+        try {
+          const response = await axiosInstance.post("/user/details", {
+            user_ids: uniqueCreatorIds,
+          });
+          const data = response.data;
           const mapping: UserIdMapping = {};
           data.forEach((user: UserData) => {
             mapping[user.user_id] = user;
           });
           setUserIdMapping(mapping);
           console.log("Got user details:", data);
-        })
-        .catch((err) => {
-          console.error(err);
-        });
-    }
-  }, [groups, authContext]);
+        } catch (err) {
+          console.error("Failed to fetch user details:", err);
+        }
+      }
+    };
+
+    fetchUserDetails();
+  }, [groups]);
 
   const handleCardClick = (groupId: string) => {
     router.push(`/groups/${groupId}`);
   };
 
-  const handleCreateGroup = () => {
+  const handleCreateGroup = async () => {
     setCreatingGroup(true);
     setCreateError("");
-    const accessToken = localStorage.getItem("access_token");
 
     if (!newGroupName.trim()) {
       setCreateError("Group name cannot be empty");
@@ -154,42 +131,20 @@ export default function DashboardPage() {
       return;
     }
 
-    if (accessToken) {
-      fetch("/api/groups", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ group_name: newGroupName }),
-      })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else if (response.status === 400) {
-            throw new Error("Invalid group name");
-          } else if (response.status === 401 || response.status === 403) {
-            throw new Error("Unauthorized");
-          } else {
-            throw new Error("Failed to create group");
-          }
-        })
-        .then((data) => {
-          setOpenDialog(false);
-          setNewGroupName("");
-          setCreatingGroup(false);
-          console.log("Created group:", data);
-          // Re-fetch the groups list
-          fetchGroups();
-        })
-        .catch((err) => {
-          console.error(err);
-          setCreateError(err.message);
-          setCreatingGroup(false);
-        });
-    } else {
-      console.log("Failed to create group: User is not authenticated");
-      setCreateError("Authentication Error");
+    try {
+      const response = await axiosInstance.post("/groups", {
+        group_name: newGroupName,
+      });
+      console.log("Created group:", response.data);
+      setOpenDialog(false);
+      setNewGroupName("");
+    } catch (err: unknown) {
+      setCreateError("Failed to create group");
+      console.log(err);
+    } finally {
       setCreatingGroup(false);
+      // Re-fetch the groups list
+      await fetchGroups();
     }
   };
 
@@ -239,9 +194,6 @@ export default function DashboardPage() {
                         <Typography variant="h5" component="div">
                           {group.group_name}
                         </Typography>
-                        {/* Add more group details here I need it */}
-
-                        {/* Only show the created by, if the userIdMapping is populated */}
                         {userIdMapping[group.creator_id] && (
                           <Typography variant="body2" color="textSecondary">
                             Created by{" "}
@@ -275,7 +227,7 @@ export default function DashboardPage() {
         <Fab
           variant="extended"
           color="primary"
-          aria-label="add"
+          aria-label="flashcard"
           sx={{ position: "fixed", bottom: 16, right: "50%" }}
           onClick={() => router.push("/flashcard")}
         >

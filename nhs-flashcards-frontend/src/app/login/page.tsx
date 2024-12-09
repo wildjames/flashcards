@@ -14,7 +14,8 @@ import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 
-import { AuthContext } from "../../context/AuthContext";
+import { AuthContext } from "@/context/AuthContext";
+import axiosInstance from "@/axios/axiosInstance";
 
 const theme = createTheme();
 
@@ -31,50 +32,37 @@ export default function LoginPage() {
   // Check if the user has some tokens already
   useEffect(() => {
     console.log("AuthContext: ", authContext);
-    if (
-      authContext?.isAuthenticated === true &&
-      authContext?.loading === false
-    ) {
+    if (authContext?.isAuthenticated && !authContext?.loading) {
       console.log("User is already authenticated. Redirecting to dashboard...");
       router.push("/dashboard");
     }
-  }, [authContext, authContext?.isAuthenticated, authContext?.loading, router]);
+  }, [authContext, router]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [e.target.name]: e.target.value,
-    });
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+      // Using the axiosInstance with interceptors
+      const response = await axiosInstance.post("/login", formData);
+
+      // Axios automatically parses the JSON response
+      const data = response.data;
+
+      // Login successful, update AuthContext
+      authContext?.login({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token,
       });
+      setError("");
 
-      if (response.ok) {
-        const data = await response.json();
-
-        // Login successful
-        authContext?.login({
-          access_token: data.access_token,
-          refresh_token: data.refresh_token,
-        });
-        setError("");
-
-        // Redirect to a protected page or dashboard
-        router.push("/dashboard");
-      } else {
-        const errorData = await response.json();
-        setError(errorData.message || "Login failed");
-      }
+      // Redirect to a protected page or dashboard
+      router.push("/dashboard");
     } catch (err) {
       console.error(err);
       setError("An unexpected error occurred");
