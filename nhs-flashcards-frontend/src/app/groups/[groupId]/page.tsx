@@ -1,18 +1,5 @@
 "use client";
 
-// FIXME: This needs to be broken down into smaller components!!!
-// I think:
-// - GroupDetails
-// - GroupCardsTable
-// - EditCardDialog
-// - DeleteGroupDialog (ask the user for confirmation!!)
-// - BulkImportDialog
-// - BulkImportReviewTable
-// - BulkImportReviewDialog
-
-// There are also a lot of repeated code snippets that can be extracted into functions.
-// Not my best work, but it's a start!
-
 import React, { useEffect, useState, useContext, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -21,17 +8,7 @@ import {
   Typography,
   Container,
   Box,
-  CircularProgress,
-  Button,
-  TextField,
   Fab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -42,6 +19,11 @@ import DashboardButton from "@/app/components/DashboardButton";
 import CardEditDialog from "@/app/components/CardEditDialog";
 import { CardEditDialogProps } from "@/app/components/CardEditDialog";
 import BulkImportDialog from "@/app/components/BulkImportDialog";
+
+import GroupDetails from "@components/GroupDetails";
+import GroupCardsTable from "@components/GroupCardsTable";
+import { CardData, CreateCardData } from "@components/GroupCardsTable";
+import DeleteGroupDialog from "@components/DeleteGroupDialog";
 
 type GroupData = {
   group_id: string;
@@ -57,42 +39,33 @@ type UserData = {
   email: string;
 };
 
-type CardData = {
-  card_id: string;
-  question: string;
-  correct_answer: string;
-  group_id: string;
-  creator_id: string;
-  time_created: string;
-  time_updated: string;
-  updated_by_id: string;
-};
-
 export default function GroupPage() {
   const { groupId } = useParams<{ groupId: string }>();
-
   const authContext = useContext(AuthContext);
   const router = useRouter();
+
   const [loadingGroup, setLoadingGroup] = useState(true);
   const [groupError, setGroupError] = useState("");
   const [group, setGroup] = useState<GroupData | null>(null);
   const [creator, setCreator] = useState<UserData | null>(null);
+
   const [loadingCards, setLoadingCards] = useState(true);
   const [displayLoadingCards, setDisplayLoadingCards] = useState(true);
   const [cardsError, setCardsError] = useState("");
   const [cards, setCards] = useState<CardData[]>([]);
 
-  // For creating new cards
   const [newQuestion, setNewQuestion] = useState("");
   const [newCorrectAnswer, setNewCorrectAnswer] = useState("");
   const [creatingCard, setCreatingCard] = useState(false);
 
-  // For editing cards
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [editCard, setEditCard] = useState<CardData | null>(null);
+  const [editCard, setEditCard] = useState<CreateCardData | null>(null);
 
-  // For bulk import of card data
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
+
+  // For deleting group
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -105,49 +78,49 @@ export default function GroupPage() {
   // Fetch group data
   useEffect(() => {
     const accessToken = localStorage.getItem("access_token");
-    if (accessToken) {
-      fetch(`/api/groups/${groupId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else throw new Error("Failed to fetch group");
-        })
-        .then((data) => {
-          setGroup(data);
-          setLoadingGroup(false);
-          // Fetch creator details
-          return fetch("/api/user/details", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({ user_ids: [data.creator_id] }),
-          });
-        })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else throw new Error("Failed to fetch user details");
-        })
-        .then((data) => {
-          setCreator(data[0]);
-        })
-        .catch((err) => {
-          console.error(err);
-          setGroupError(err.message);
-          setLoadingGroup(false);
-        });
-    } else {
+    if (!accessToken) {
       setGroupError("Authentication Error");
       setLoadingGroup(false);
+      return;
     }
+
+    fetch(`/api/groups/${groupId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then((response) => {
+        if (response.ok) return response.json();
+        else throw new Error("Failed to fetch group");
+      })
+      .then((data) => {
+        setGroup(data);
+        setLoadingGroup(false);
+        // Fetch creator details
+        return fetch("/api/user/details", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ user_ids: [data.creator_id] }),
+        });
+      })
+      .then((response) => {
+        if (response.ok) return response.json();
+        else throw new Error("Failed to fetch user details");
+      })
+      .then((data) => {
+        setCreator(data[0]);
+      })
+      .catch((err) => {
+        console.error(err);
+        setGroupError(err.message);
+        setLoadingGroup(false);
+      });
   }, [groupId]);
 
-  // If loadingCards is true for more than 1 second, display the loading spinner
-  // This is to prevent the spinner from flashing on the screen for very short loading times
+  // Delay the display of the card loading spinner to avoid brief flickers
   useEffect(() => {
     const timeout = setTimeout(() => {
       setDisplayLoadingCards(loadingCards);
@@ -155,76 +128,43 @@ export default function GroupPage() {
     return () => clearTimeout(timeout);
   }, [loadingCards]);
 
-  // Delete group
-  const handleDeleteGroup = () => {
-    const accessToken = localStorage.getItem("access_token");
-    if (accessToken) {
-      fetch(`/api/groups/${groupId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((response) => {
-          if (response.ok) {
-            router.push("/dashboard");
-          } else {
-            throw new Error("Failed to delete group");
-          }
-        })
-        .catch((err) => {
-          console.error(err);
-          setGroupError(err.message);
-        });
-    } else {
-      setGroupError("Authentication Error");
-    }
-  };
-
-  // Fetch cards for the group
-  // Make this a callback function so that it can be called from places other than useEffect
   const fetchCards = useCallback(() => {
     setLoadingCards(true);
-    console.log("Fetching cards for group", groupId);
     const accessToken = localStorage.getItem("access_token");
-    if (accessToken) {
-      fetch(`/api/groups/${groupId}/cards`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else throw new Error("Failed to fetch cards");
-        })
-        .then((data) => {
-          setCards(data);
-          setLoadingCards(false);
-        })
-        .catch((err) => {
-          console.error(err);
-          setCardsError(err.message);
-          setLoadingCards(false);
-        });
-    } else {
+    if (!accessToken) {
       setCardsError("Authentication Error");
       setLoadingCards(false);
+      return;
     }
+
+    fetch(`/api/groups/${groupId}/cards`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then((response) => {
+        if (response.ok) return response.json();
+        else throw new Error("Failed to fetch cards");
+      })
+      .then((data) => {
+        setCards(data);
+        setLoadingCards(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setCardsError(err.message);
+        setLoadingCards(false);
+      });
   }, [groupId]);
 
-  // Fetch cards when the group ID changes (this should only happen on page load)
   useEffect(() => {
     fetchCards();
   }, [fetchCards, groupId, authContext]);
 
-  // Create a new card.
-  // When the creation is done, focus the question input in the table
-  // If the user has not filled in one of the things, focus that input
   const handleCreateCard = () => {
     setCreatingCard(true);
     const accessToken = localStorage.getItem("access_token");
 
-    // Focus the first empty input
     if (!newQuestion.trim() || !newCorrectAnswer.trim()) {
       if (!newQuestion.trim()) {
         document.getElementById("table-question")?.focus();
@@ -235,41 +175,39 @@ export default function GroupPage() {
       return;
     }
 
-    if (accessToken) {
-      fetch("/api/cards", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          question: newQuestion,
-          correct_answer: newCorrectAnswer,
-          group_id: groupId,
-        }),
-      })
-        .then((response) => {
-          if (response.ok) return response.json();
-          else throw new Error("Failed to create card");
-        })
-        .then(() => {
-          fetchCards();
-          setNewQuestion("");
-          setNewCorrectAnswer("");
-        })
-        .catch((err) => {
-          console.error(err);
-          setCreatingCard(false);
-        });
-    } else {
+    if (!accessToken) {
       console.error("Authentication Error");
+      setCreatingCard(false);
+      return;
     }
 
-    console.log("Card created");
-    setCreatingCard(false);
-
-    // refocus the question input
-    document.getElementById("table-question")?.focus();
+    fetch("/api/cards", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        question: newQuestion,
+        correct_answer: newCorrectAnswer,
+        group_id: groupId,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) return response.json();
+        else throw new Error("Failed to create card");
+      })
+      .then(() => {
+        fetchCards();
+        setNewQuestion("");
+        setNewCorrectAnswer("");
+        setCreatingCard(false);
+        document.getElementById("table-question")?.focus();
+      })
+      .catch((err) => {
+        console.error(err);
+        setCreatingCard(false);
+      });
   };
 
   const handleOpenBulkDialog = () => setOpenBulkDialog(true);
@@ -280,12 +218,10 @@ export default function GroupPage() {
   ) => {
     // TODO: Implement bulk card creation (need a new backend endpoint)
     console.log("Creating bulk cards", cards);
-    // After successful creation, re-fetchCards
     fetchCards();
   };
 
-  // Clicking on a card row opens the edit dialog
-  const handleCardClick = (card: CardData) => {
+  const handleCardClick = (card: CreateCardData) => {
     setEditCard(card);
     setOpenEditDialog(true);
   };
@@ -294,6 +230,37 @@ export default function GroupPage() {
     if (e.key === "Enter") {
       handleCreateCard();
     }
+  };
+
+  const handleDeleteGroup = () => {
+    setDeleteError("");
+    setOpenDeleteDialog(true);
+  };
+
+  const confirmDeleteGroup = () => {
+    const accessToken = localStorage.getItem("access_token");
+    if (!accessToken) {
+      setDeleteError("Authentication Error");
+      return;
+    }
+
+    fetch(`/api/groups/${groupId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+      .then((response) => {
+        if (response.ok) {
+          router.push("/dashboard");
+        } else {
+          throw new Error("Failed to delete group");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setDeleteError(err.message);
+      });
   };
 
   const cardEditProps: CardEditDialogProps = {
@@ -320,28 +287,14 @@ export default function GroupPage() {
         </Toolbar>
       </AppBar>
 
-      {/* Group Details */}
       <Container maxWidth="lg">
         <Box sx={{ mt: 4 }}>
-          {loadingGroup ? (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : groupError ? (
-            <Typography color="error" variant="body1">
-              {groupError}
-            </Typography>
-          ) : group ? (
-            <>
-              <Typography variant="h4" component="div">
-                {group.group_name}
-              </Typography>
-              <Typography variant="body1">
-                {creator ? "Created by " + creator.username : "Loading..."} on{" "}
-                {new Date(group.time_created).toLocaleString()}
-              </Typography>
-            </>
-          ) : null}
+          <GroupDetails
+            loadingGroup={loadingGroup}
+            groupError={groupError}
+            group={group}
+            creator={creator}
+          />
         </Box>
 
         <Fab
@@ -356,7 +309,6 @@ export default function GroupPage() {
         </Fab>
 
         <Fab
-          // FIXME: Should be round for small screens and extended for larger screens
           variant="extended"
           color="secondary"
           aria-label="delete"
@@ -367,104 +319,34 @@ export default function GroupPage() {
           Delete Group
         </Fab>
 
-        {/* Cards Table */}
-        <Box
-          sx={{
-            mt: 4,
-            // FIXME: This breaks the layout on small screens, when the group name and creator name are long.
-            // They wrap around, and push the table down!
-            maxHeight: "calc(100vh - 300px)",
-            overflow: "auto",
-          }}
-        >
-          {displayLoadingCards ? (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-              <CircularProgress />
-            </Box>
-          ) : cardsError ? (
-            <Typography color="error" variant="body1">
-              {cardsError}
-            </Typography>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table stickyHeader aria-label="group cards table">
-                <TableHead>
-                  <TableRow
-                    key="new-card"
-                    hover
-                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-                  >
-                    <TableCell>
-                      <TextField
-                        margin="dense"
-                        id="table-question"
-                        label="Question"
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        value={newQuestion}
-                        onChange={(e) => setNewQuestion(e.target.value)}
-                        onKeyDown={handleCreateEnter}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <TextField
-                        margin="dense"
-                        id="table-correct_answer"
-                        label="Correct Answer"
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        value={newCorrectAnswer}
-                        onChange={(e) => setNewCorrectAnswer(e.target.value)}
-                        onKeyDown={handleCreateEnter}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        onClick={handleCreateCard}
-                        disabled={creatingCard}
-                      >
-                        {creatingCard ? "Creating..." : "Create"}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cards.map((card) => (
-                    <TableRow
-                      key={card.card_id}
-                      hover
-                      sx={{
-                        "&:last-child td, &:last-child th": { border: 0 },
-                        cursor: "pointer",
-                      }}
-                      onClick={() => handleCardClick(card)}
-                    >
-                      <TableCell>{card.question}</TableCell>
-                      <TableCell>{card.correct_answer}</TableCell>
-                      <TableCell>
-                        <Button onClick={() => handleCardClick(card)}>
-                          Edit
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Box>
+        <GroupCardsTable
+          cards={cards}
+          newQuestion={newQuestion}
+          setNewQuestion={setNewQuestion}
+          newCorrectAnswer={newCorrectAnswer}
+          setNewCorrectAnswer={setNewCorrectAnswer}
+          creatingCard={creatingCard}
+          handleCreateCard={handleCreateCard}
+          handleCardClick={handleCardClick}
+          displayLoadingCards={displayLoadingCards}
+          cardsError={cardsError}
+          handleCreateEnter={handleCreateEnter}
+        />
 
-        {/* Bulk Import Dialog */}
         <BulkImportDialog
           open={openBulkDialog}
           onClose={handleCloseBulkDialog}
           onSubmit={handleCreateBulkCards}
         />
 
-        {/* Card Edit Dialog */}
         <CardEditDialog {...cardEditProps} />
+
+        <DeleteGroupDialog
+          open={openDeleteDialog}
+          onClose={() => setOpenDeleteDialog(false)}
+          onConfirm={confirmDeleteGroup}
+          error={deleteError}
+        />
       </Container>
     </>
   );
