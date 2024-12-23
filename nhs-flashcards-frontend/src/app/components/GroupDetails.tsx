@@ -3,14 +3,7 @@
 import React from "react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 
-type UserData = {
-  username: string;
-};
-
-type GroupData = {
-  group_name: string;
-  time_created: string;
-};
+import { GroupData, UserData } from "@/app/common/types";
 
 interface GroupDetailsProps {
   loadingGroup: boolean;

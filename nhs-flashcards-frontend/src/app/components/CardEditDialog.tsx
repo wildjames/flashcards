@@ -11,16 +11,7 @@ import {
   DialogActions,
 } from "@mui/material";
 
-type CardData = {
-  card_id: string;
-  question: string;
-  correct_answer: string;
-  group_id?: string;
-  creator_id?: string;
-  time_created?: string;
-  time_updated?: string;
-  updated_by_id?: string;
-};
+import { CardData } from "@/app/common/types";
 
 export type CardEditDialogProps = {
   openEditDialog: boolean;

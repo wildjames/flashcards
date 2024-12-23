@@ -14,30 +14,17 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import { AuthContext } from "@/context/AuthContext";
-import LogoutButton from "@/app/components/LogoutButton";
-import DashboardButton from "@/app/components/DashboardButton";
-import CardEditDialog from "@/app/components/CardEditDialog";
-import { CardEditDialogProps } from "@/app/components/CardEditDialog";
-import BulkImportDialog from "@/app/components/BulkImportDialog";
+import LogoutButton from "@components/LogoutButton";
+import DashboardButton from "@components/DashboardButton";
+import CardEditDialog from "@components/CardEditDialog";
+import { CardEditDialogProps } from "@components/CardEditDialog";
+import BulkImportDialog from "@components/BulkImportDialog";
 
 import GroupDetails from "@components/GroupDetails";
 import GroupCardsTable from "@components/GroupCardsTable";
-import { CardData } from "@components/GroupCardsTable";
 import DeleteGroupDialog from "@components/DeleteGroupDialog";
 
-type GroupData = {
-  group_id: string;
-  group_name: string;
-  creator_id: string;
-  time_created: string;
-  time_updated: string;
-};
-
-type UserData = {
-  user_id: string;
-  username: string;
-  email: string;
-};
+import { CardData, GroupData, UserData } from "@/app/common/types";
 
 export default function GroupPage() {
   const { groupId } = useParams<{ groupId: string }>();

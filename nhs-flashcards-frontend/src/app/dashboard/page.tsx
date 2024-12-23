@@ -12,12 +12,6 @@ import {
   CardActionArea,
   CardContent,
   CircularProgress,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions,
   Fab,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -27,6 +21,7 @@ import Grid from "@mui/material/Grid2";
 import { AuthContext } from "@/context/AuthContext";
 import LogoutButton from "@components/LogoutButton";
 import axiosInstance from "@/axios/axiosInstance";
+import GroupCreationDialog from "@components/GroupCreationDialog";
 
 type GroupData = {
   group_id: string;
@@ -56,9 +51,6 @@ export default function DashboardPage() {
   const [userIdMapping, setUserIdMapping] = useState<UserIdMapping>({});
   // For creating new groups
   const [openDialog, setOpenDialog] = useState(false);
-  const [newGroupName, setNewGroupName] = useState("");
-  const [creatingGroup, setCreatingGroup] = useState(false);
-  const [createError, setCreateError] = useState("");
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -68,6 +60,7 @@ export default function DashboardPage() {
     }
   }, [authContext, router]);
 
+  // Fetch user groups
   const fetchGroups = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -116,31 +109,9 @@ export default function DashboardPage() {
     router.push(`/groups/${groupId}`);
   };
 
-  const handleCreateGroup = async () => {
-    setCreatingGroup(true);
-    setCreateError("");
-
-    if (!newGroupName.trim()) {
-      setCreateError("Group name cannot be empty");
-      setCreatingGroup(false);
-      return;
-    }
-
-    try {
-      const response = await axiosInstance.post("/groups", {
-        group_name: newGroupName,
-      });
-      console.log("Created group:", response.data);
-      setOpenDialog(false);
-      setNewGroupName("");
-    } catch (err: unknown) {
-      setCreateError("Failed to create group");
-      console.log(err);
-    } finally {
-      setCreatingGroup(false);
-      // Re-fetch the groups list
-      await fetchGroups();
-    }
+  // Called after group creation to refetch group list
+  const handleGroupCreated = async () => {
+    await fetchGroups();
   };
 
   return (
@@ -153,7 +124,6 @@ export default function DashboardPage() {
           >
             Dashboard
           </Typography>
-
           <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
             <LogoutButton />
           </Box>
@@ -208,6 +178,7 @@ export default function DashboardPage() {
           )}
         </Box>
 
+        {/* Create Group FAB */}
         <Fab
           variant="extended"
           color="primary"
@@ -219,6 +190,7 @@ export default function DashboardPage() {
           Create Group
         </Fab>
 
+        {/* Flashcard FAB */}
         <Fab
           variant="extended"
           color="primary"
@@ -229,41 +201,14 @@ export default function DashboardPage() {
           <BoltIcon sx={{ mr: 1 }} />
           Flashcard
         </Fab>
-
-        {/* Group Creation Dialog */}
-        <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
-          <DialogTitle>Create New Group</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="group_name"
-              label="Group Name"
-              type="text"
-              fullWidth
-              variant="standard"
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-            />
-            {createError && (
-              <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-                {createError}
-              </Typography>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setOpenDialog(false)}
-              disabled={creatingGroup}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreateGroup} disabled={creatingGroup}>
-              {creatingGroup ? "Creating..." : "Create"}
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Container>
+
+      {/* Dialog for creating a new group */}
+      <GroupCreationDialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onGroupCreated={handleGroupCreated}
+      />
     </>
   );
 }
