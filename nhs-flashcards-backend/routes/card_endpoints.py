@@ -45,6 +45,47 @@ def create_card():
 
     return jsonify({'card_id': new_card.card_id}), 201
 
+# Bulk create cards
+@jwt_required()
+def create_bulk_cards():
+    data = request.get_json()
+    cards = data.get('cards')
+    group_id = UUID(data.get('group_id'))
+
+    if not all([cards, group_id]):
+        return jsonify({'message': 'Missing required fields'}), 400
+
+    user_id = get_jwt_identity()
+    user_uuid = UUID(user_id)
+    user = User.query.filter_by(id=user_uuid).first()
+    user_groups = user.subscribed_groups.all()
+
+    # Check if the user is subscribed to the group
+    if group_id not in [group.group_id for group in user_groups]:
+        return jsonify({'message': 'User is not subscribed to the group'}), 403
+
+    # Check if the group exists
+    if not Group.query.filter_by(group_id=group_id).first():
+        return jsonify({'message': 'Group not found'}), 404
+
+    # Create new cards
+    created_cards = []
+    for card in cards:
+        new_card = Card(
+            question=card.get('question'),
+            correct_answer=card.get('correct_answer'),
+            group_id=group_id,
+            creator_id=user_uuid,
+            updated_by_id=user_uuid
+        )
+        db.session.add(new_card)
+        created_cards.append(new_card)
+
+    db.session.commit()
+    card_ids = [card.card_id for card in created_cards]
+
+    return jsonify({'message': 'Cards created', 'card_ids': card_ids}), 201
+
 # Get Card Endpoint
 @jwt_required()
 def get_card(card_id):

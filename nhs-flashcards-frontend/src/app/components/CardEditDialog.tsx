@@ -15,11 +15,11 @@ type CardData = {
   card_id: string;
   question: string;
   correct_answer: string;
-  group_id: string;
-  creator_id: string;
-  time_created: string;
-  time_updated: string;
-  updated_by_id: string;
+  group_id?: string;
+  creator_id?: string;
+  time_created?: string;
+  time_updated?: string;
+  updated_by_id?: string;
 };
 
 export type CardEditDialogProps = {

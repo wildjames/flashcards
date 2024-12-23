@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+# TODO list
+
+## Bulk imports
+
+I wanted control over bulk importing. There are a few core ones that I want:
+
+- [x] CSV (arbitrary delimiter, including tabs)
+- [x] JSON
+- [ ] Confluence copy-paste (newline-delimited, user-defined number of columns)
+- [ ] Google sheets live-update
+- [ ] Web-scraping. Maybe via webhooks?
+- [STRETCH GOAL?] Database hookup?
+
 ## Getting Started
 
 First, run the development server:

@@ -22,7 +22,7 @@ import BulkImportDialog from "@/app/components/BulkImportDialog";
 
 import GroupDetails from "@components/GroupDetails";
 import GroupCardsTable from "@components/GroupCardsTable";
-import { CardData, CreateCardData } from "@components/GroupCardsTable";
+import { CardData } from "@components/GroupCardsTable";
 import DeleteGroupDialog from "@components/DeleteGroupDialog";
 
 type GroupData = {
@@ -59,7 +59,7 @@ export default function GroupPage() {
   const [creatingCard, setCreatingCard] = useState(false);
 
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [editCard, setEditCard] = useState<CreateCardData | null>(null);
+  const [editCard, setEditCard] = useState<CardData | null>(null);
 
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
 
@@ -221,7 +221,7 @@ export default function GroupPage() {
     fetchCards();
   };
 
-  const handleCardClick = (card: CreateCardData) => {
+  const handleCardClick = (card: CardData) => {
     setEditCard(card);
     setOpenEditDialog(true);
   };

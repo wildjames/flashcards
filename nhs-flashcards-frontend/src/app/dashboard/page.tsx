@@ -101,13 +101,8 @@ export default function DashboardPage() {
           const response = await axiosInstance.post("/user/details", {
             user_ids: uniqueCreatorIds,
           });
-          const data = response.data;
-          const mapping: UserIdMapping = {};
-          data.forEach((user: UserData) => {
-            mapping[user.user_id] = user;
-          });
-          setUserIdMapping(mapping);
-          console.log("Got user details:", data);
+          setUserIdMapping(response.data);
+          console.log("Got user details:", response.data);
         } catch (err) {
           console.error("Failed to fetch user details:", err);
         }

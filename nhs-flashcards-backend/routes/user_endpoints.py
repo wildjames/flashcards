@@ -112,14 +112,14 @@ def get_user_details():
     user_ids = list(set([uuid.UUID(user_id) for user_id in user_ids if uuid.UUID(user_id)]))
 
     # Get the user details
-    user_details = []
+    user_details = {}
     for user_id in user_ids:
         user = User.query.filter_by(id=user_id).first()
         if user:
-            user_details.append({
+            user_details[str(user_id)] = {
                 'username': user.username,
                 'email': user.email,
                 'user_id': user.id
-            })
+            }
 
     return jsonify(user_details), 200

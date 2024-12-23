@@ -20,17 +20,11 @@ export type CardData = {
   card_id: string;
   question: string;
   correct_answer: string;
-  group_id: string;
-  creator_id: string;
-  time_created: string;
-  time_updated: string;
-  updated_by_id: string;
-};
-
-export type CreateCardData = {
-  card_id: string;
-  question: string;
-  correct_answer: string;
+  group_id?: string;
+  creator_id?: string;
+  time_created?: string;
+  time_updated?: string;
+  updated_by_id?: string;
 };
 
 interface GroupCardsTableProps {
@@ -41,7 +35,7 @@ interface GroupCardsTableProps {
   setNewCorrectAnswer: (val: string) => void;
   creatingCard: boolean;
   handleCreateCard: () => void;
-  handleCardClick: (card: CreateCardData) => void;
+  handleCardClick: (card: CardData) => void;
   displayLoadingCards: boolean;
   cardsError: string;
   handleCreateEnter: (e: React.KeyboardEvent) => void;

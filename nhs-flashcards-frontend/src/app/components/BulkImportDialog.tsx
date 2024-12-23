@@ -57,14 +57,20 @@ export default function BulkImportDialog({
 
     switch (format) {
       case "csv":
-        rows = data.split("\n").map((row) => row.split(","));
+        rows = data
+          .trim()
+          .split("\n")
+          .map((row) => row.split(","));
         break;
       case "confluence":
         console.log("Confluence format not supported yet");
         rows = [];
         break;
       case "tabbed":
-        rows = data.split("\n").map((row) => row.split("\t"));
+        rows = data
+          .trim()
+          .split("\n")
+          .map((row) => row.split("\t"));
         break;
       default:
         throw new Error(`Unsupported format: ${format}`);
