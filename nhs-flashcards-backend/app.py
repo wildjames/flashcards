@@ -62,9 +62,10 @@ with app.app_context():
 
 
 from data_imports.google_sheets import get_google_creds, get_data_from_sheet, SheetSyncJob
+import uuid
 
 with app.app_context():
-    job_id = ""
+    job_id = uuid.UUID("2609d26d-8b5a-44a1-84ab-4c19d30ef7a0")
     job = SheetSyncJob.query.filter_by(job_id=job_id).first()
     creds = get_google_creds()
     print("Credentials:")

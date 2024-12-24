@@ -153,37 +153,41 @@ def create_group_from_google_sheet():
     user_id = get_jwt_identity()
     user_uuid = uuid.UUID(user_id)
 
-    group = Group.query.filter_by(name=group_name).first()
-    if not group:
-        return jsonify({"message": "Group not found"}), 404
+    group = Group.query.filter_by(group_name=group_name).first()
+    if group:
+        return jsonify({"message": "Group name already exists"}), 403
 
-    user = User.query.filter_by(id=user_uuid).first()
-    user_groups = user.subscribed_groups.all()
-    if group.group_id not in [g.group_id for g in user_groups]:
-        return jsonify({'message': 'User is not subscribed to the group'}), 403
+    # Create a new group
+    group = Group(
+        creator_id=user_uuid,
+        group_name=group_name
+    )
+    db.session.add(group)
+    db.session.commit()
 
     # Create a new sync job (store in DB)
     new_job = SheetSyncJob(
-        group_id=str(group.group_id),
+        group_id=group.group_id,
         sheet_id=sheet_id,
         sheet_range=sheet_range,
-        creator_id=str(user_uuid),
+        creator_id=user_uuid,
         cron_string="*/5 * * * *" # every 5 minutes
     )
     db.session.add(new_job)
     db.session.commit()
 
-    # Schedule the actual job in APScheduler
-    scheduler.add_job(
-        id=f"sync-sheet-{new_job.job_id}",
-        func=sync_cards_from_sheet,
-        args=[new_job.job_id],
-        trigger='cron',  # or 'interval'
-        # TODO: parse `cron_string`
-        minute='*/5',
-    )
+    # # Schedule the actual job in APScheduler
+    # scheduler.add_job(
+    #     id=new_job.job_id,
+    #     func=sync_cards_from_sheet,
+    #     args=[new_job.job_id],
+    #     trigger='cron',  # or 'interval'
+    #     # TODO: parse `cron_string`
+    #     minute='*/5',
+    # )
 
     return jsonify({
         "message": f"Sync job created for group: {group_name}",
+        "groupd_id": group.group_id,
         "job_id": new_job.job_id
     }), 201

@@ -1,23 +1,42 @@
 import os
 
 import gspread
-from google.oauth2.service_account import Credentials
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import InstalledAppFlow
 from uuid import UUID
 
 from database.db_interface import db
 from database.db_types import SheetSyncJob, Card
 
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 GOOGLE_OAUTH2_CREDS_FILE = os.getenv("GOOGLE_OAUTH2_CREDS_FILE", None)
 if not GOOGLE_OAUTH2_CREDS_FILE:
     raise ValueError("GOOGLE_OAUTH2_CREDS_FILE environment variable not set")
 
 def get_google_creds():
     # TODO: This is not tested, just some boilerplate code. SET UP CREDENTIALS CORRECTLY
-    scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-    creds = Credentials.from_service_account_file(
-        GOOGLE_OAUTH2_CREDS_FILE,
-        scopes=scopes
-    )
+    if not os.path.exists(GOOGLE_OAUTH2_CREDS_FILE):
+        raise ValueError(f"Google OAuth2 credentials file not found: {GOOGLE_OAUTH2_CREDS_FILE}")
+
+    creds = None
+    # The file token.json stores the user's access and refresh tokens, and is
+    # created automatically when the authorization flow completes for the first
+    # time.
+    if os.path.exists(GOOGLE_OAUTH2_CREDS_FILE):
+        creds = Credentials.from_authorized_user_file(GOOGLE_OAUTH2_CREDS_FILE, SCOPES)
+    # If there are no (valid) credentials available, let the user log in.
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                "credentials.json", SCOPES
+            )
+            creds = flow.run_local_server(port=0)
+        # Save the credentials for the next run
+        with open(GOOGLE_OAUTH2_CREDS_FILE, "w") as token:
+            token.write(creds.to_json())
     return creds
 
 
