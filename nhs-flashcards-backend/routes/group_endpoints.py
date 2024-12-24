@@ -141,7 +141,7 @@ def get_group_info(group_id):
     }), 200
 
 @jwt_required()
-def create_with_sheet():
+def create_group_from_google_sheet():
     data = request.get_json()
     group_name = data.get("group_name")
     sheet_id = data.get("sheet_id")

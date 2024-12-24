@@ -1,3 +1,5 @@
+import os
+
 import gspread
 from google.oauth2.service_account import Credentials
 from uuid import UUID
@@ -5,22 +7,34 @@ from uuid import UUID
 from database.db_interface import db
 from database.db_types import SheetSyncJob, Card
 
+GOOGLE_OAUTH2_CREDS_FILE = os.getenv("GOOGLE_OAUTH2_CREDS_FILE", None)
+if not GOOGLE_OAUTH2_CREDS_FILE:
+    raise ValueError("GOOGLE_OAUTH2_CREDS_FILE environment variable not set")
+
 def get_google_creds():
     # TODO: This is not tested, just some boilerplate code. SET UP CREDENTIALS CORRECTLY
     scopes = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
     creds = Credentials.from_service_account_file(
-        "path/to/service_account.json",
+        GOOGLE_OAUTH2_CREDS_FILE,
         scopes=scopes
     )
     return creds
 
-def sync_cards_from_sheet(job_id):
+
+def get_data_from_sheet(job: SheetSyncJob, creds: Credentials):
+    client = gspread.authorize(creds)
+    sheet = client.open_by_key(job.sheet_id)
+    worksheet = sheet.worksheet(job.sheet_range)
+    rows = worksheet.get_all_values()  # returns a list of lists
+    return rows
+
+def sync_cards_from_sheet(job_id: str):
     """
     Periodic task that:
-    1. Looks up the SheetSyncJob by job_id
-    2. Connects to the Google Sheet
-    3. Iterates over each row in the defined range
-    4. Creates/updates Card records in the database
+    - Looks up the SheetSyncJob by job_id
+    - Connects to the Google Sheet
+    - Iterates over each row in the defined range
+    - Creates/updates Card records in the database
     """
     job = SheetSyncJob.query.filter_by(job_id=job_id).first()
     if not job:
@@ -29,10 +43,7 @@ def sync_cards_from_sheet(job_id):
 
     # Connect to the sheet
     creds = get_google_creds()
-    client = gspread.authorize(creds)
-    sheet = client.open_by_key(job.sheet_id)
-    worksheet = sheet.worksheet(job.sheet_range)
-    rows = worksheet.get_all_values()  # returns a list of lists
+    rows = get_data_from_sheet(job, creds)
 
     group_id = UUID(job.group_id)
     creator_id = UUID(job.creator_id)

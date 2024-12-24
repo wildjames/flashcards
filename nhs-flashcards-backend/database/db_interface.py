@@ -10,7 +10,16 @@ DATABASE_PORT = os.getenv('DATABASE_PORT')
 DATABASE_NAME = os.getenv('DATABASE_NAME')
 
 if not all([DATABASE_ENGINE, DATABASE_USERNAME, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_PORT, DATABASE_NAME]):
-    raise ValueError("One or more database environment variables are not set")
+    # Which one is missing?
+    missing = [k for k, v in {
+        'DATABASE_ENGINE': DATABASE_ENGINE,
+        'DATABASE_USERNAME': DATABASE_USERNAME,
+        'DATABASE_PASSWORD': DATABASE_PASSWORD,
+        'DATABASE_HOST': DATABASE_HOST,
+        'DATABASE_PORT': DATABASE_PORT,
+        'DATABASE_NAME': DATABASE_NAME
+    }.items() if not v]
+    raise ValueError(f"One or more database environment variables are not set: {missing}")
 
 # Construct the database URI
 DATABASE_URI = f"{DATABASE_ENGINE}://{DATABASE_USERNAME}:{DATABASE_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"

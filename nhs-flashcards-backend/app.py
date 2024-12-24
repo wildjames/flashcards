@@ -60,6 +60,20 @@ with app.app_context():
     scheduler.init_app(app)
     scheduler.start()
 
+
+from data_imports.google_sheets import get_google_creds, get_data_from_sheet, SheetSyncJob
+
+with app.app_context():
+    job_id = ""
+    job = SheetSyncJob.query.filter_by(job_id=job_id).first()
+    creds = get_google_creds()
+    print("Credentials:")
+    print(creds)
+    print(f"\n\n\nGetting data for job: {job}")
+    rows = get_data_from_sheet(job, creds)
+    print(f"Rows:\n{rows}")
+
+
 ### USER ENDPOINTS ###
 import routes.user_endpoints as user_endpoints
 
@@ -89,6 +103,7 @@ app.add_url_rule("/cards/flashcard", view_func=card_endpoints.get_random_card, m
 import routes.group_endpoints as group_endpoints
 
 app.add_url_rule("/groups", view_func=group_endpoints.create_group, methods=['POST'])
+app.add_url_rule("/groups/google-sheets", view_func=group_endpoints.create_group_from_google_sheet, methods=['POST'])
 app.add_url_rule("/groups", view_func=group_endpoints.get_groups, methods=['GET'])
 app.add_url_rule("/groups/<uuid:group_id>", view_func=group_endpoints.get_group_info, methods=['GET'])
 app.add_url_rule("/groups/<uuid:group_id>", view_func=group_endpoints.update_group, methods=['PUT'])

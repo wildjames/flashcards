@@ -16,15 +16,6 @@ RUN npm install -g yarn
 # Set the working directory
 WORKDIR /workspace
 
-# Copy and install Python dependencies
-COPY nhs-flashcards-backend/requirements.txt /tmp/requirements.txt
-RUN python -m pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt
-
-# Copy and install Node.js dependencies
-COPY nhs-flashcards-frontend/package*.json /tmp/frontend/
-RUN cd /tmp/frontend && npm install
-
 # Expose the ports for Flask and React
 EXPOSE 5000 3000
 
