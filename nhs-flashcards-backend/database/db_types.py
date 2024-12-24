@@ -75,3 +75,17 @@ class UserCardData(db.Model):
     times_answered = db.Column(db.UUID, default=0)
     times_answered_incorrectly = db.Column(db.UUID, default=0)
     last_seen = db.Column(db.DateTime)
+
+class SheetSyncJob(db.Model):
+    __tablename__ = 'sheet_sync_job'
+
+    job_id = db.Column(db.UUID, primary_key=True, default=uuid.uuid4)
+    group_id = db.Column(db.UUID, db.ForeignKey('group.group_id'), nullable=False)
+    creator_id = db.Column(db.UUID, db.ForeignKey('user.id'), nullable=False)
+
+    sheet_id = db.Column(db.Text, nullable=False)
+    sheet_range = db.Column(db.Text, nullable=False)
+
+    cron_string = db.Column(db.Text, nullable=True)
+
+    time_created = db.Column(db.DateTime, default=lambda: datetime.now().isoformat())

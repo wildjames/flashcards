@@ -53,6 +53,12 @@ migrate = Migrate(app, db)
 with app.app_context():
     db.create_all()
 
+# Start the scheduler
+from scheduler import scheduler
+
+with app.app_context():
+    scheduler.init_app(app)
+    scheduler.start()
 
 ### USER ENDPOINTS ###
 import routes.user_endpoints as user_endpoints

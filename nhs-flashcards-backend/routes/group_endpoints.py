@@ -5,8 +5,12 @@ from flask_jwt_extended import (
 from datetime import datetime
 import uuid
 
+from data_imports.google_sheets import sync_cards_from_sheet
+
 from database.db_interface import db
-from database.db_types import Group, User
+from database.db_types import Group, SheetSyncJob, User
+
+from scheduler import scheduler
 
 # Create Card Group Endpoint
 @jwt_required()
@@ -135,3 +139,51 @@ def get_group_info(group_id):
         'time_created': group.time_created,
         'time_updated': group.time_updated
     }), 200
+
+@jwt_required()
+def create_with_sheet():
+    data = request.get_json()
+    group_name = data.get("group_name")
+    sheet_id = data.get("sheet_id")
+    sheet_range = data.get("sheet_range")
+
+    if not (group_name and sheet_id and sheet_range):
+        return jsonify({"message": "Missing required fields"}), 400
+
+    user_id = get_jwt_identity()
+    user_uuid = uuid.UUID(user_id)
+
+    group = Group.query.filter_by(name=group_name).first()
+    if not group:
+        return jsonify({"message": "Group not found"}), 404
+
+    user = User.query.filter_by(id=user_uuid).first()
+    user_groups = user.subscribed_groups.all()
+    if group.group_id not in [g.group_id for g in user_groups]:
+        return jsonify({'message': 'User is not subscribed to the group'}), 403
+
+    # Create a new sync job (store in DB)
+    new_job = SheetSyncJob(
+        group_id=str(group.group_id),
+        sheet_id=sheet_id,
+        sheet_range=sheet_range,
+        creator_id=str(user_uuid),
+        cron_string="*/5 * * * *" # every 5 minutes
+    )
+    db.session.add(new_job)
+    db.session.commit()
+
+    # Schedule the actual job in APScheduler
+    scheduler.add_job(
+        id=f"sync-sheet-{new_job.job_id}",
+        func=sync_cards_from_sheet,
+        args=[new_job.job_id],
+        trigger='cron',  # or 'interval'
+        # TODO: parse `cron_string`
+        minute='*/5',
+    )
+
+    return jsonify({
+        "message": f"Sync job created for group: {group_name}",
+        "job_id": new_job.job_id
+    }), 201
