@@ -13,6 +13,8 @@ I wanted control over bulk importing. There are a few core ones that I want:
 - [ ] Web-scraping. Maybe via webhooks?
 - [STRETCH GOAL?] Database hookup?
 
+The google sheets group creation dialogue box is in there, I just need a backend endpoint to handle it. Probably some background task to run an update every 15 minutes? Hour? Whatever. I could use APScheduler. A new task for each sheet, or one master update task that spawns them all at once?
+
 ## Getting Started
 
 First, run the development server:

@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import axiosInstance from "@/axios/axiosInstance";
+import { attemptTokenRefresh } from "@/axios/axiosInstance";
 
 interface AuthContextType {
   loading: boolean;
@@ -19,17 +19,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Log the user out and clear tokens
-  const logout = () => {
-    console.log("Logging out...");
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    setIsAuthenticated(false);
-    setLoading(false);
-    console.log("Logged out successfully. Redirecting to login page.");
-    router.push("/login");
-  };
-
   // Check whether the user is authenticated by making a protected request
   const checkAuth = async () => {
     const accessToken = localStorage.getItem("access_token");
@@ -44,10 +33,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      // Attempt a protected request. If the token is expired,
-      // the interceptor will try up to 5 times to refresh it.
-      await axiosInstance.get("/protected");
-      // If successful (or successfully refreshed), user is authenticated
+      // Check if access token is expired
+      const accessTokenExpiration = JSON.parse(
+        atob(accessToken!.split(".")[1])
+      ).exp;
+      if (accessTokenExpiration * 1000 < Date.now()) {
+        console.log("Access token is expired. Refreshing...");
+        attemptTokenRefresh();
+      }
+      // If we're still in date (or successfully refreshed), user is authenticated
       console.log("User is authenticated");
       setIsAuthenticated(true);
       setLoading(false);
@@ -60,7 +54,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    // On mount, just check authentication state by hitting a protected endpoint
+    // On mount, check authentication state
     checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -71,6 +65,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsAuthenticated(true);
     setLoading(false);
     router.push("/dashboard");
+  };
+
+  // Log the user out and clear tokens
+  const logout = () => {
+    console.log("Logging out...");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    setIsAuthenticated(false);
+    setLoading(false);
+    console.log("Logged out successfully. Redirecting to login page.");
+    router.push("/login");
   };
 
   return (

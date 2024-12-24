@@ -22,7 +22,7 @@ let failedRequestsQueue: {
 }[] = [];
 
 // Function to attempt a token refresh
-async function attemptTokenRefresh() {
+export async function attemptTokenRefresh() {
   console.log("Refreshing token");
   const refreshToken = localStorage.getItem("refresh_token");
 
