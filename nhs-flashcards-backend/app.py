@@ -60,19 +60,20 @@ with app.app_context():
     scheduler.init_app(app)
     scheduler.start()
 
+# TODO: This implementation is broken - or my credentials are. 
+# I get missing fields client_id, refresh_token, client_secret.
+# from data_imports.google_sheets import get_google_creds, get_data_from_sheet, SheetSyncJob
+# import uuid
 
-from data_imports.google_sheets import get_google_creds, get_data_from_sheet, SheetSyncJob
-import uuid
-
-with app.app_context():
-    job_id = uuid.UUID("2609d26d-8b5a-44a1-84ab-4c19d30ef7a0")
-    job = SheetSyncJob.query.filter_by(job_id=job_id).first()
-    creds = get_google_creds()
-    print("Credentials:")
-    print(creds)
-    print(f"\n\n\nGetting data for job: {job}")
-    rows = get_data_from_sheet(job, creds)
-    print(f"Rows:\n{rows}")
+# with app.app_context():
+#     job_id = uuid.UUID("2609d26d-8b5a-44a1-84ab-4c19d30ef7a0")
+#     job = SheetSyncJob.query.filter_by(job_id=job_id).first()
+#     creds = get_google_creds()
+#     print("Credentials:")
+#     print(creds)
+#     print(f"\n\n\nGetting data for job: {job}")
+#     rows = get_data_from_sheet(job, creds)
+#     print(f"Rows:\n{rows}")
 
 
 ### USER ENDPOINTS ###

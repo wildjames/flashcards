@@ -2,6 +2,21 @@ import os
 import openai
 
 
+# Ensure environment variables for API key, organization, and project ID are set
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+OPENAI_ORGANIZATION = os.getenv('OPENAI_ORGANIZATION')
+OPENAI_PROJECT_ID = os.getenv('OPENAI_PROJECT_ID')
+OPENAI_MODEL = os.getenv('OPENAI_MODEL')
+
+if not OPENAI_API_KEY:
+    raise EnvironmentError("OPENAI_API_KEY environment variable is not set.")
+if not OPENAI_ORGANIZATION:
+    raise EnvironmentError("OPENAI_ORGANIZATION environment variable is not set.")
+if not OPENAI_PROJECT_ID:
+    raise EnvironmentError("OPENAI_PROJECT_ID environment variable is not set.")
+if not OPENAI_MODEL:
+    raise EnvironmentError("OPENAI_MODEL environment variable is not set.")
+
 
 def get_incorrect_answer(question, correct_answer):
     """
@@ -14,21 +29,6 @@ def get_incorrect_answer(question, correct_answer):
     Returns:
         list: A list containing two incorrect answers.
     """
-
-    # Ensure environment variables for API key, organization, and project ID are set
-    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
-    OPENAI_ORGANIZATION = os.getenv('OPENAI_ORGANIZATION')
-    OPENAI_PROJECT_ID = os.getenv('OPENAI_PROJECT_ID')
-    OPENAI_MODEL = os.getenv('OPENAI_MODEL')
-
-    if not OPENAI_API_KEY:
-        raise EnvironmentError("OPENAI_API_KEY environment variable is not set.")
-    if not OPENAI_ORGANIZATION:
-        raise EnvironmentError("OPENAI_ORGANIZATION environment variable is not set.")
-    if not OPENAI_PROJECT_ID:
-        raise EnvironmentError("OPENAI_PROJECT_ID environment variable is not set.")
-    if not OPENAI_MODEL:
-        raise EnvironmentError("OPENAI_MODEL environment variable is not set.")
 
     # Set up OpenAI API client
     client = openai.OpenAI(
