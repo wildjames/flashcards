@@ -11,6 +11,12 @@ PIP := $(VENV_DIR)/bin/pip
 SHELL := /bin/bash
 
 # Backend commands
+create-venv:
+	cd $(BACKEND_DIR) && \
+	$(PYTHON) -m venv ${VENV_DIR} && \
+	$(VENV_DIR)/bin/pip install --upgrade pip && \
+	$(VENV_DIR)/bin/pip install -r requirements.txt
+
 create-db:
 	source .env && \
 		cd $(BACKEND_DIR) && \
@@ -68,3 +74,7 @@ install: install-backend install-frontend
 lint: lint-backend lint-frontend
 
 clean: clean-backend clean-frontend
+
+build: install-frontend
+	cd $(FRONTEND_DIR) && \
+		npm run build

@@ -1,34 +1,37 @@
 {
-  "name": "Flask React DevContainer",
-  "dockerFile": "Dockerfile",
-  "context": "..",
-  "customizations": {
-    "vscode": {
-      "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash",
-        "python.pythonPath": "/usr/bin/python3",
-        "python.analysis.autoSearchPaths": true,
-        "python.analysis.useLibraryCodeForTypes": true,
-        "eslint.enable": true,
-        "editor.formatOnSave": true
-      },
-      "extensions": [
-        "ms-python.python",
-        "ms-python.vscode-pylance",
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode",
-        "ms-azuretools.vscode-docker",
-        "ms-vscode.makefile-tools",
-        "ms-python.mypy-type-checker",
-        "GitHub.copilot"
-      ]
-    }
-  },
-  "mounts": [
-    // .ssh is mounted to allow for SSH key forwarding
-    "type=bind,source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly"
-  ],
-  "postCreateCommand": "bash .devcontainer/setup.sh",
-  "forwardPorts": [3000, 5000],
-  "remoteUser": "vscode"
+    "name": "Flask React DevContainer",
+    "dockerFile": "Dockerfile",
+    "context": "..",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "python.pythonPath": "/usr/bin/python3",
+                "python.analysis.autoSearchPaths": true,
+                "python.analysis.useLibraryCodeForTypes": true,
+                "eslint.enable": true,
+                "editor.formatOnSave": true
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "dbaeumer.vscode-eslint",
+                "esbenp.prettier-vscode",
+                "ms-azuretools.vscode-docker",
+                "ms-vscode.makefile-tools",
+                "ms-python.mypy-type-checker",
+                "GitHub.copilot"
+            ]
+        }
+    },
+    "mounts": [
+        // .ssh is mounted to allow for SSH key forwarding
+        "type=bind,source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,readonly"
+    ],
+    "postCreateCommand": "bash .devcontainer/setup.sh",
+    "forwardPorts": [
+        3000,
+        5000
+    ],
+    "remoteUser": "vscode"
 }
