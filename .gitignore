@@ -43,7 +43,7 @@ frontend/node_modules/
 frontend/build/
 frontend/dist/
 frontend/.cache/
-
+.next/
 
 # MacOS Files
 .DS_Store

@@ -1,8 +1,8 @@
 .PHONY: run-backend-dev run-frontend-dev lint-backend lint-frontend lint install-backend install-frontend install clean-backend clean-frontend clean
 
 # Directories
-BACKEND_DIR := /workspaces/nhs-flashcards/nhs-flashcards-backend
-FRONTEND_DIR := /workspaces/nhs-flashcards/nhs-flashcards-frontend
+BACKEND_DIR := /workspaces/flashcards/flashcard-api
+FRONTEND_DIR := /workspaces/flashcards/flashcard-frontend
 
 # Python virtual environment
 VENV_DIR := $(BACKEND_DIR)/venv
