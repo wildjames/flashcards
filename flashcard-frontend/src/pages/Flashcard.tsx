@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 
 import { CardData } from "../helpers/types";
+import axiosInstance from "../helpers/axiosInstance";
+
 import LogoutButton from "../components/LogoutButton";
 import DashboardButton from "../components/DashboardButton";
 
@@ -25,45 +27,7 @@ export default function Flashcard() {
     const [flippedCard, setFlippedCard] = useState<number | null>(null);
     const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number | null>(null);
 
-    useEffect(() => {
-        const accessToken = localStorage.getItem("access_token");
-        if (accessToken) {
-            fetch("/api/cards/flashcard", {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            })
-                .then((response) => {
-                    if (response.ok) return response.json();
-                    else throw new Error("Failed to fetch flashcard");
-                })
-                .then((data: CardData) => {
-                    setCard(data);
-                    const answers = [
-                        data.correct_answer || "ERROR: NO DATA",
-                        data.incorrect_answer || "ERROR: NO DATA",
-                    ];
-                    const correctIndex = Math.floor(Math.random() * 2);
-                    [answers[0], answers[correctIndex]] = [answers[correctIndex], answers[0]];
-                    setOptions(answers);
-                    setCorrectAnswerIndex(correctIndex);
-                    setLoading(false);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    setError(err.message);
-                    setLoading(false);
-                });
-        } else {
-            console.error("Access token not found");
-        }
-    }, []);
-
-    const handleAnswerClick = (index: number) => {
-        setFlippedCard(index);
-    };
-
-    const handleNext = () => {
+    const fetchFlashcard = () => {
         setLoading(true);
         setCard(null);
         setError("");
@@ -71,37 +35,38 @@ export default function Flashcard() {
         setFlippedCard(null);
         setCorrectAnswerIndex(null);
 
-        const accessToken = localStorage.getItem("access_token");
-        if (accessToken) {
-            fetch("/api/cards/flashcard", {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
+        axiosInstance.get("/cards/flashcard")
+            .then((response) => {
+                if (response.status === 200) return response.data;
+                else throw new Error("Failed to fetch flashcard");
             })
-                .then((response) => {
-                    if (response.ok) return response.json();
-                    else throw new Error("Failed to fetch flashcard");
-                })
-                .then((data: CardData) => {
-                    setCard(data);
-                    const answers = [
-                        data.correct_answer || "ERROR: NO DATA",
-                        data.incorrect_answer || "ERROR: NO DATA",
-                    ];
-                    const correctIndex = Math.floor(Math.random() * 2);
-                    [answers[0], answers[correctIndex]] = [answers[correctIndex], answers[0]];
-                    setOptions(answers);
-                    setCorrectAnswerIndex(correctIndex);
-                    setLoading(false);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    setError(err.message);
-                    setLoading(false);
-                });
-        } else {
-            console.error("Access token not found");
-        }
+            .then((data: CardData) => {
+                setCard(data);
+                const answers = [
+                    data.correct_answer || "ERROR: NO DATA",
+                    data.incorrect_answer || "ERROR: NO DATA",
+                ];
+                const correctIndex = Math.floor(Math.random() * 2);
+                [answers[0], answers[correctIndex]] = [answers[correctIndex], answers[0]];
+                setOptions(answers);
+                setCorrectAnswerIndex(correctIndex);
+            })
+            .catch((err) => {
+                console.error(err);
+                setError(err.message);
+            })
+            .finally(() => {
+                setLoading(false);
+            })
+    }
+
+    // Fetch flashcard data when the component mounts
+    useEffect(() => {
+        fetchFlashcard();
+    }, []);
+
+    const handleAnswerClick = (index: number) => {
+        setFlippedCard(index);
     };
 
     return (
@@ -184,7 +149,7 @@ export default function Flashcard() {
                             <Button
                                 variant="contained"
                                 color="primary"
-                                onClick={handleNext}
+                                onClick={fetchFlashcard}
                                 sx={{ mt: 4 }}
                             >
                                 Next Question
