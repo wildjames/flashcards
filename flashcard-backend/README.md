@@ -10,6 +10,15 @@ This is a simple backend for serving the flashcard frontend with cards and data.
 - Users can join groups to access shared flashcards.
 - Secure endpoints with JWT authentication.
 
+## TODO:
+
+- [ ] This needs to be served with a proper WSGI thing. Do that
+- [ ] Bulk importing needs to be implemented
+  - [ ] Google sheets
+  - [ ] Bulk data from a request
+  - [ ] Confluence?
+  - [ ] Perhaps given a page, use llm/nlp to parse out q&a? Some existing projects but they seem paid or rubbish so this may be hard
+
 ## Getting Started
 
 This project comes with a devcontainer, and that is the recommended way to develop here. However, manual setup is described below.
