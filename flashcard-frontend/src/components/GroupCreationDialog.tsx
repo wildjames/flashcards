@@ -107,12 +107,19 @@ export default function GroupCreationDialog({
         }
     };
 
+    // Allow Enter key to create a card
+    const handleCreateEnter = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            handleCreateGroup();
+        }
+    };
+
     return (
-        <Dialog open={open} onClose={handleClose}>
+        <Dialog open={open} onClose={handleClose} disableRestoreFocus >
             <DialogTitle>Create New Group</DialogTitle>
             <DialogContent>
                 <TextField
-                    autoFocus
+                    autoFocus={true}
                     margin="dense"
                     id="group_name"
                     label="Group Name"
@@ -121,6 +128,7 @@ export default function GroupCreationDialog({
                     variant="standard"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
+                    onKeyDown={handleCreateEnter}
                 />
 
                 <FormControlLabel

@@ -10,40 +10,41 @@ import {
     Select,
     MenuItem,
 } from "@mui/material";
+import axiosInstance from "../helpers/axiosInstance";
 
 interface ImportedCard {
     question: string;
     correct_answer: string;
-};
+}
 
 interface BulkImportDialogProps {
     open: boolean;
     onClose: () => void;
-    onSubmit: (cards: ImportedCard[]) => void;
-};
+    groupId: string;
+}
 
 export default function BulkImportDialog({
     open,
     onClose,
-    onSubmit,
+    groupId,
 }: BulkImportDialogProps) {
     const [bulkData, setBulkData] = useState("");
     const [bulkImportFormat, setBulkImportFormat] = useState("");
 
-    const parseData = (data: string, format: string) => {
-        // Parse the incoming data based on the selected input format
+    const parseData = (data: string, format: string): ImportedCard[] => {
         let rows: string[][] = [];
 
         if (format === "json") {
             const parsedData = JSON.parse(data);
-            // Check that this data is an array, and each element is an object with question and correct_answer keys
             if (!Array.isArray(parsedData)) {
                 throw new Error("JSON data must be an array");
             }
             if (
                 !parsedData.every(
                     (el) =>
-                        typeof el === "object" && "question" in el && "correct_answer" in el
+                        typeof el === "object" &&
+                        "question" in el &&
+                        "correct_answer" in el
                 )
             ) {
                 throw new Error(
@@ -55,20 +56,14 @@ export default function BulkImportDialog({
 
         switch (format) {
             case "csv":
-                rows = data
-                    .trim()
-                    .split("\n")
-                    .map((row) => row.split(","));
+                rows = data.trim().split("\n").map((row) => row.split(","));
                 break;
             case "confluence":
                 console.log("Confluence format not supported yet");
                 rows = [];
                 break;
             case "tabbed":
-                rows = data
-                    .trim()
-                    .split("\n")
-                    .map((row) => row.split("\t"));
+                rows = data.trim().split("\n").map((row) => row.split("\t"));
                 break;
             default:
                 throw new Error(`Unsupported format: ${format}`);
@@ -83,16 +78,26 @@ export default function BulkImportDialog({
     const handleBulkSubmit = () => {
         try {
             const parsedCards = parseData(bulkData, bulkImportFormat);
-            onSubmit(parsedCards);
-            onClose();
-            setBulkData("");
+            axiosInstance
+                .post("/cards/bulk", { group_id: groupId, cards: parsedCards })
+                .then((response) => {
+                    if (response.status === 200) {
+                        onClose();
+                        setBulkData("");
+                    } else {
+                        throw new Error("Failed to create bulk cards");
+                    }
+                })
+                .catch((err) => {
+                    console.error("Failed to create bulk cards:", err);
+                });
         } catch (error) {
             console.error("Failed to parse data:", error);
         }
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth>
+        <Dialog open={open} onClose={onClose} disableRestoreFocus fullWidth>
             <DialogTitle>Bulk Add Cards</DialogTitle>
             <DialogContent>
                 <InputLabel id="bulk-import-format">Import Format</InputLabel>
@@ -110,13 +115,16 @@ export default function BulkImportDialog({
                     <MenuItem value="json">JSON</MenuItem>
                 </Select>
                 <TextField
+                    autoFocus={true}
                     id="bulk-input"
                     label="Paste Data"
                     multiline
                     rows={8}
                     fullWidth
                     variant="outlined"
-                    placeholder="For CSV:&#10;Question,Correct Answer&#10;What is 2+2?,4"
+                    placeholder={`For CSV:
+Question,Correct Answer
+What is 2+2?,4`}
                     value={bulkData}
                     onChange={(e) => setBulkData(e.target.value)}
                 />

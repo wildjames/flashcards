@@ -138,6 +138,7 @@ export default function CardEditDialog(props: CardEditDialogProps) {
             <Dialog
                 open={props.openEditDialog}
                 onClose={() => props.setOpenEditDialog(false)}
+                disableRestoreFocus
             >
                 <DialogTitle>Edit Card</DialogTitle>
                 <DialogContent>

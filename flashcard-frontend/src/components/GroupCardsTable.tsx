@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Box,
     CircularProgress,
@@ -13,44 +13,124 @@ import {
     TextField,
     Button,
 } from "@mui/material";
-
+import axiosInstance from "../helpers/axiosInstance";
 import { CardData } from "../helpers/types";
+import CardEditDialog, { CardEditDialogProps } from "../components/CardEditDialog";
 
 interface GroupCardsTableProps {
-    cards: CardData[];
-    newQuestion: string;
-    setNewQuestion: (val: string) => void;
-    newCorrectAnswer: string;
-    setNewCorrectAnswer: (val: string) => void;
-    creatingCard: boolean;
-    handleCreateCard: () => void;
-    handleCardClick: (card: CardData) => void;
-    displayLoadingCards: boolean;
-    cardsError: string;
-    handleCreateEnter: (e: React.KeyboardEvent) => void;
+    groupId: string;
 }
 
-export default function GroupCardsTable({
-    cards,
-    newQuestion,
-    setNewQuestion,
-    newCorrectAnswer,
-    setNewCorrectAnswer,
-    creatingCard,
-    handleCreateCard,
-    handleCardClick,
-    displayLoadingCards,
-    cardsError,
-    handleCreateEnter,
-}: GroupCardsTableProps) {
+export default function GroupCardsTable({ groupId }: GroupCardsTableProps) {
+    const [cards, setCards] = useState<CardData[]>([]);
+    const [newQuestion, setNewQuestion] = useState("");
+    const [newCorrectAnswer, setNewCorrectAnswer] = useState("");
+    const [creatingCard, setCreatingCard] = useState(false);
+    const [loadingCards, setLoadingCards] = useState(true);
+    const [displayLoadingCards, setDisplayLoadingCards] = useState(true);
+    const [cardsError, setCardsError] = useState("");
+
+    const [openEditDialog, setOpenEditDialog] = useState(false);
+    const [editCard, setEditCard] = useState<CardData | null>(null);
+
+    // Fetch cards for the group
+    const fetchCards = useCallback(() => {
+        setLoadingCards(true);
+        const accessToken = localStorage.getItem("access_token");
+        if (!accessToken) {
+            setCardsError("Authentication Error");
+            setLoadingCards(false);
+            return;
+        }
+
+        axiosInstance
+            .get(`/groups/${groupId}/cards`)
+            .then((response) => {
+                if (response.status === 200) return response.data;
+                else throw new Error("Failed to fetch cards");
+            })
+            .then((data) => {
+                setCards(data);
+                setLoadingCards(false);
+            })
+            .catch((err) => {
+                console.error(err);
+                setCardsError(err.message);
+                setLoadingCards(false);
+            });
+    }, [groupId]);
+
+    useEffect(() => {
+        fetchCards();
+    }, [fetchCards]);
+
+    // Delay loading spinner display to avoid flickers
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDisplayLoadingCards(loadingCards);
+        }, 1000);
+        return () => clearTimeout(timeout);
+    }, [loadingCards]);
+
+    // Handle creating a new card
+    const handleCreateCard = () => {
+        setCreatingCard(true);
+
+        if (!newQuestion.trim() || !newCorrectAnswer.trim()) {
+            if (!newQuestion.trim()) {
+                document.getElementById("table-question")?.focus();
+            } else if (!newCorrectAnswer.trim()) {
+                document.getElementById("table-correct_answer")?.focus();
+            }
+            setCreatingCard(false);
+            return;
+        }
+
+        axiosInstance
+            .post("/cards", {
+                question: newQuestion,
+                correct_answer: newCorrectAnswer,
+                group_id: groupId,
+            })
+            .then((response) => {
+                if (response.status === 201) return response.data;
+                else throw new Error("Failed to create card");
+            })
+            .then(() => {
+                fetchCards();
+                setNewQuestion("");
+                setNewCorrectAnswer("");
+                setCreatingCard(false);
+                document.getElementById("table-question")?.focus();
+            })
+            .catch((err) => {
+                console.error(err);
+                setCreatingCard(false);
+            });
+    };
+
+    // Open the card edit dialog
+    const handleCardClick = (card: CardData) => {
+        setEditCard(card);
+        setOpenEditDialog(true);
+    };
+
+    // Allow Enter key to create a card
+    const handleCreateEnter = (e: React.KeyboardEvent) => {
+        if (e.key === "Enter") {
+            handleCreateCard();
+        }
+    };
+
+    const cardEditProps: CardEditDialogProps = {
+        openEditDialog,
+        setOpenEditDialog,
+        editCard,
+        fetchCards,
+    };
+
     return (
-        <Box
-            sx={{
-                mt: 4,
-                maxHeight: "calc(100vh - 300px)",
-                overflow: "auto",
-            }}
-        >
+        <Box sx={{ mt: 4, maxHeight: "calc(100vh - 300px)", overflow: "auto" }}>
             {displayLoadingCards ? (
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                     <CircularProgress />
@@ -123,6 +203,8 @@ export default function GroupCardsTable({
                     </Table>
                 </TableContainer>
             )}
+
+            <CardEditDialog {...cardEditProps} />
         </Box>
     );
 }

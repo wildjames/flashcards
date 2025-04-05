@@ -2,12 +2,14 @@
 
 ## Tech debt
 
-- [ ] I'm not using the SSR offered by next, so I need to migrate back to react/vite.
-- [ ] I have fetch statements all over the place, that should use the axios instance I made. Update them.
-- [ ] The logic on the flashcard page is NOT good. Refactor it!
-  - [ ] The "Flashcard Quiz" header is not centered, and besides it should be on the left
-  - [ ] The flashcards themselves have a log of styling, which should be in the assets
+- [x] I'm not using the SSR offered by next, so I need to migrate back to react/vite.
+- [x] I have fetch statements all over the place, that should use the axios instance I made. Update them.
+- [x] The logic on the flashcard page is NOT good. Refactor it!
+  - [x] The "Flashcard Quiz" header is not centered, and besides it should be on the left
+  - [x] The flashcards themselves have a log of styling, which should be in the assets
 - [ ] The registration page has a lot of styling in it. Move that to the assets
+- The GroupInfo page is a mess. Clean it up
+    - [ ] The GroupCardsTable has a log of styling in it. Remove that
 
 ## Bulk imports
 
