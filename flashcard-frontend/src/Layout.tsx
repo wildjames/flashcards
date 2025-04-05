@@ -1,15 +1,26 @@
 import { Outlet } from "react-router-dom"
 
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+
 import "./assets/globals.css";
 
-import { AuthProvider } from "./context/AuthContext";
 
+const darkTheme = createTheme({
+    colorSchemes: {
+        light: true
+    },
+});
 
 const Layout = () => {
+
     return (
-        <>
+        <ThemeProvider theme={darkTheme}>
+            <CssBaseline />
+
             <title>Flashcards</title>
             <meta name="description" content="For brushing up on team knowledge" />
+
             {/* Preload the fonts */}
             <link
                 rel="preload"
@@ -25,12 +36,11 @@ const Layout = () => {
                 type="font/woff"
                 crossOrigin="anonymous"
             />
+            
             <div className="geistSans geistMono antialiased">
-                <AuthProvider>
-                    <Outlet />
-                </AuthProvider>
+                <Outlet />
             </div>
-        </>
+        </ThemeProvider>
     );
 };
 

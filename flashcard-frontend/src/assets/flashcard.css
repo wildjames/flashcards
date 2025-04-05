@@ -33,10 +33,9 @@
 }
 
 .flip-card .front {
-    background: #fff;
-    /* Approximates theme.palette.background.paper */
-    color: #000;
-    /* Approximates theme.palette.text.primary */
+    /* These should probably be inherited from the theme, but dark mode looks terrible */
+    /* background: #fff;
+    color: #000; */
 }
 
 .flip-card .back {
