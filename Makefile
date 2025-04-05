@@ -1,7 +1,7 @@
 .PHONY: run-backend-dev run-frontend-dev lint-backend lint-frontend lint install-backend install-frontend install clean-backend clean-frontend clean
 
 # Directories
-BACKEND_DIR := /workspaces/flashcards/flashcard-api
+BACKEND_DIR := /workspaces/flashcards/flashcard-backend
 FRONTEND_DIR := /workspaces/flashcards/flashcard-frontend
 
 # Python virtual environment
@@ -34,6 +34,7 @@ run-backend-dev:
 		cd $(BACKEND_DIR) && \
 		export FLASK_APP=app.py; \
 		export FLASK_ENV=development; \
+		echo $(VENV_DIR); \
 		$(VENV_DIR)/bin/flask --debug run --host=0.0.0.0
 
 lint-backend:
@@ -53,6 +54,11 @@ run-frontend-dev:
 	source .env && \
 		cd $(FRONTEND_DIR) && \
 		npm run dev
+
+build-frontend: install-frontend
+	source .env && \
+		cd $(FRONTEND_DIR) && \
+		npm run build
 
 lint-frontend:
 	cd $(FRONTEND_DIR) && \

@@ -4,10 +4,15 @@
     min-width: 20em;
     min-height: 10em;
     /* TODO: use an em here */
-    margin: 40px;
+    margin: 30px;
     cursor: pointer;
     transform-style: preserve-3d;
     transition: transform 0.6s;
+}
+
+.flip-card .text {
+    margin: 1.5em;
+    text-align: center;
 }
 
 /* When the card is flipped */

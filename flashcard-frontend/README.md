@@ -7,10 +7,11 @@
 - [x] The logic on the flashcard page is NOT good. Refactor it!
   - [x] The "Flashcard Quiz" header is not centered, and besides it should be on the left
   - [x] The flashcards themselves have a log of styling, which should be in the assets
-- [ ] The registration page has a lot of styling in it. Move that to the assets
+- [x] The registration page has a lot of styling in it. Move that to the assets
 - [x] The GroupInfo page is a mess. Clean it up
 - [ ] Containerise this. Have react build the frontend, and serve it with flask.
   - [ ] Will need to pull the API URL from the environment.
+- [ ] Mobile friendly styling would be nice
 
 ## Bulk imports
 

@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"
+import { Route, Routes } from "react-router-dom"
 
 import './App.css'
 
@@ -19,6 +19,7 @@ function App() {
             <AuthProvider>
                 <Routes>
                     <Route path="/" element={<Layout />}>
+                        <Route index element={<Login />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
                         <Route path="/dashboard" element={<Dashboard />} />

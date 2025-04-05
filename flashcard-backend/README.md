@@ -26,8 +26,8 @@ This project comes with a devcontainer, and that is the recommended way to devel
 1. **Clone the repository:**
 
    ```bash
-   git clone https://github.com/yourusername/flashcard-api.git
-   cd flashcard-api
+   git clone https://github.com/wildjames/flashcards.git
+   cd flashcard-backend
    ```
 
 2. **Create a virtual environment:**
@@ -64,7 +64,7 @@ DATABASE_PORT=3306
 DATABASE_NAME=flashcards_db
 ```
 
-**Note:** Replace the above with your actual credentials.
+**Replace the above with your actual credentials.**
 
 ### Database Setup
 

@@ -131,12 +131,12 @@ export default function Flashcard() {
                                         style={{ flex: 1 }}
                                     >
                                         <Box className="front">
-                                            <Typography sx={{ textAlign: "center" }}>
+                                            <Typography className="text">
                                                 {option}
                                             </Typography>
                                         </Box>
                                         <Box className="back">
-                                            <Typography sx={{ textAlign: "center" }}>
+                                            <Typography className="text">
                                                 {index === correctAnswerIndex ? "Correct!" : "Incorrect"}
                                             </Typography>
                                         </Box>

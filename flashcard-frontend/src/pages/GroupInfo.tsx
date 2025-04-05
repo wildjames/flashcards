@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -27,6 +27,10 @@ export default function GroupInfo() {
     const authContext = useContext(AuthContext);
     const nav = useNavigate();
 
+    // Local state only for controlling dialogs
+    const [openBulkDialog, setOpenBulkDialog] = useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+
     // Redirect to login if not authenticated
     useEffect(() => {
         if (!authContext?.isAuthenticated && !authContext?.loading) {
@@ -39,10 +43,6 @@ export default function GroupInfo() {
         nav("/dashboard");
         return null;
     }
-
-    // Local state only for controlling dialogs
-    const [openBulkDialog, setOpenBulkDialog] = useState(false);
-    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
     return (
         <>
