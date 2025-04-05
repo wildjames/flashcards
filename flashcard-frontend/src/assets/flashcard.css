@@ -1,0 +1,57 @@
+.flip-card {
+    position: relative;
+    width: 100%;
+    min-width: 20em;
+    min-height: 10em;
+    /* TODO: use an em here */
+    margin: 40px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+}
+
+/* When the card is flipped */
+.flip-card.flipped {
+    transform: rotateY(180deg);
+}
+
+.flip-card .front,
+.flip-card .back {
+    position: absolute;
+    backface-visibility: hidden;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow: hidden;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    /* Approximation for theme.shadows[3] */
+    box-shadow: 0px 3px 1px -2px rgba(0, 0, 0, 0.2),
+        0px 2px 2px 0px rgba(0, 0, 0, 0.14),
+        0px 1px 5px 0px rgba(0, 0, 0, 0.12);
+}
+
+.flip-card .front {
+    background: #fff;
+    /* Approximates theme.palette.background.paper */
+    color: #000;
+    /* Approximates theme.palette.text.primary */
+}
+
+.flip-card .back {
+    transform: rotateY(180deg);
+}
+
+/* Apply different background colors based on whether the answer is correct */
+.flip-card.correct .back {
+    background: #4caf50;
+    /* Approximates theme.palette.success.main */
+    color: #fff;
+}
+
+.flip-card.incorrect .back {
+    background: #f44336;
+    /* Approximates theme.palette.error.main */
+    color: #fff;
+}

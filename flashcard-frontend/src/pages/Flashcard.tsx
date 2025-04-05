@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import {
     AppBar,
     Toolbar,
@@ -11,59 +10,12 @@ import {
     Card,
     CardContent,
 } from "@mui/material";
-import { styled } from "@mui/material/styles";
 
 import { CardData } from "../helpers/types";
-
 import LogoutButton from "../components/LogoutButton";
 import DashboardButton from "../components/DashboardButton";
 
-interface FlipCardProps {
-    isflipped: string;
-    correct: string;
-}
-
-// TODO: This should be a reusable component
-const FlipCard = styled(Box)<FlipCardProps>(
-    ({ theme, isflipped, correct }) => ({
-        // perspective: "1000px", // Doesn't really have much effect
-        position: "relative",
-        width: "100%",
-        minWidth: "20em",
-        minHeight: "10em",
-        margin: theme.spacing(5),
-        cursor: "pointer",
-        transformStyle: "preserve-3d",
-        transform: isflipped === "true" ? "rotateY(180deg)" : "none",
-        transition: "transform 0.6s",
-
-        "& .front, & .back": {
-            position: "absolute",
-            backfaceVisibility: "hidden",
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            borderRadius: "4px",
-            boxShadow: theme.shadows[3],
-        },
-
-        "& .front": {
-            background: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-        },
-
-        "& .back": {
-            transform: "rotateY(180deg)",
-            background:
-                correct === "true"
-                    ? theme.palette.success.main
-                    : theme.palette.error.main,
-            color: theme.palette.common.white,
-        },
-    })
-);
+import "../assets/flashcard.css";
 
 export default function Flashcard() {
     const [loading, setLoading] = useState(true);
@@ -71,9 +23,7 @@ export default function Flashcard() {
     const [error, setError] = useState("");
     const [options, setOptions] = useState<string[]>([]);
     const [flippedCard, setFlippedCard] = useState<number | null>(null);
-    const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number | null>(
-        null
-    );
+    const [correctAnswerIndex, setCorrectAnswerIndex] = useState<number | null>(null);
 
     useEffect(() => {
         const accessToken = localStorage.getItem("access_token");
@@ -89,14 +39,12 @@ export default function Flashcard() {
                 })
                 .then((data: CardData) => {
                     setCard(data);
-                    const answers = [data.correct_answer || "ERROR: NO DATA", data.incorrect_answer || "ERROR: NO DATA"];
-                    // Randomly shuffle the answers
-                    const correctIndex = Math.floor(Math.random() * 2);
-                    [answers[0], answers[correctIndex]] = [
-                        answers[correctIndex],
-                        answers[0],
+                    const answers = [
+                        data.correct_answer || "ERROR: NO DATA",
+                        data.incorrect_answer || "ERROR: NO DATA",
                     ];
-
+                    const correctIndex = Math.floor(Math.random() * 2);
+                    [answers[0], answers[correctIndex]] = [answers[correctIndex], answers[0]];
                     setOptions(answers);
                     setCorrectAnswerIndex(correctIndex);
                     setLoading(false);
@@ -136,12 +84,12 @@ export default function Flashcard() {
                 })
                 .then((data: CardData) => {
                     setCard(data);
-                    const answers = [data.correct_answer || "ERROR: NO DATA", data.incorrect_answer || "ERROR: NO DATA"];
-                    const correctIndex = Math.floor(Math.random() * 2);
-                    [answers[0], answers[correctIndex]] = [
-                        answers[correctIndex],
-                        answers[0],
+                    const answers = [
+                        data.correct_answer || "ERROR: NO DATA",
+                        data.incorrect_answer || "ERROR: NO DATA",
                     ];
+                    const correctIndex = Math.floor(Math.random() * 2);
+                    [answers[0], answers[correctIndex]] = [answers[correctIndex], answers[0]];
                     setOptions(answers);
                     setCorrectAnswerIndex(correctIndex);
                     setLoading(false);
@@ -160,26 +108,36 @@ export default function Flashcard() {
         <>
             <AppBar position="static">
                 <Toolbar>
-                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    <Typography
+                        variant="h6"
+                        sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}
+                    >
                         Flashcard Quiz
                     </Typography>
-                    <DashboardButton />
-                    <LogoutButton />
+                    <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
+                        <DashboardButton />
+                        <LogoutButton />
+                    </Box>
                 </Toolbar>
             </AppBar>
 
-            <Container maxWidth="sm">
+            <Container maxWidth={false}>
                 {loading ? (
                     <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
                         <CircularProgress />
-                    </Box>
+                    </Box >
                 ) : error ? (
                     <Typography color="error" variant="body1" sx={{ mt: 4 }}>
                         {error}
                     </Typography>
                 ) : card ? (
-                    <Box sx={{ mt: 4, textAlign: "center" }}>
-                        <Card sx={{ mb: 4, padding: 2 }}>
+                    <Box sx={{
+                        mt: 4,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                    }}>
+                        <Card sx={{ mb: 4, padding: 2, minWidth: "40%", maxWidth: "75%" }}>
                             <CardContent>
                                 <Typography variant="h5">{card.question}</Typography>
                             </CardContent>
@@ -188,62 +146,38 @@ export default function Flashcard() {
                             sx={{
                                 display: "flex",
                                 justifyContent: "center",
-                                alignItems: "stretch", // Ensures all cards grow equally
-                                gap: 2, // Add spacing between cards if needed
+                                alignItems: "stretch",
+                                gap: 2,
                             }}
                         >
-                            {options.map((option, index) => (
-                                <FlipCard
-                                    key={index}
-                                    isflipped={(flippedCard === index).toString()}
-                                    correct={(index === correctAnswerIndex).toString()}
-                                    onClick={() => handleAnswerClick(index)}
-                                    sx={{
-                                        flex: 1, // Ensures equal growth
-                                    }}
-                                >
+                            {options.map((option, index) => {
+                                // Determine classes based on flipped state and correctness
+                                const flipCardClasses = [
+                                    "flip-card",
+                                    flippedCard === index ? "flipped" : "",
+                                    index === correctAnswerIndex ? "correct" : "incorrect",
+                                ].join(" ");
+
+                                return (
                                     <Box
-                                        className="front"
-                                        sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            overflow: "hidden", // Ensure no overflow by default
-                                            maxHeight: "600px", // Set a max height for consistent sizing
-                                        }}
+                                        key={index}
+                                        className={flipCardClasses}
+                                        onClick={() => handleAnswerClick(index)}
+                                        style={{ flex: 1 }}
                                     >
-                                        <Typography
-                                            sx={{
-                                                overflowY: "auto", // Add scroll for overflow
-                                                textAlign: "center",
-                                            }}
-                                        >
-                                            {option}
-                                        </Typography>
+                                        <Box className="front">
+                                            <Typography sx={{ textAlign: "center" }}>
+                                                {option}
+                                            </Typography>
+                                        </Box>
+                                        <Box className="back">
+                                            <Typography sx={{ textAlign: "center" }}>
+                                                {index === correctAnswerIndex ? "Correct!" : "Incorrect"}
+                                            </Typography>
+                                        </Box>
                                     </Box>
-                                    <Box
-                                        className="back"
-                                        sx={{
-                                            display: "flex",
-                                            flexDirection: "column",
-                                            justifyContent: "center",
-                                            alignItems: "center",
-                                            overflow: "hidden", // Ensure no overflow by default
-                                            maxHeight: "600px", // Set a max height for consistent sizing
-                                        }}
-                                    >
-                                        <Typography
-                                            sx={{
-                                                overflowY: "auto", // Add scroll for overflow
-                                                textAlign: "center",
-                                            }}
-                                        >
-                                            {index === correctAnswerIndex ? "Correct!" : "Incorrect"}
-                                        </Typography>
-                                    </Box>
-                                </FlipCard>
-                            ))}
+                                );
+                            })}
                         </Box>
 
                         {flippedCard !== null && (
@@ -257,8 +191,9 @@ export default function Flashcard() {
                             </Button>
                         )}
                     </Box>
-                ) : null}
-            </Container>
+                ) : null
+                }
+            </Container >
         </>
     );
 }
