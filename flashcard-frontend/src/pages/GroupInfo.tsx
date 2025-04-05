@@ -25,7 +25,8 @@ import GroupDetails from "../components/GroupDetails";
 import GroupCardsTable from "../components/GroupCardsTable";
 import DeleteGroupDialog from "../components/DeleteGroupDialog";
 
-import { CardData, GroupData, UserData } from "../helpers/types";
+import axiosInstance from "../helpers/axiosInstance";
+import { CardData, GroupData, UserData, UserIdMapping } from "../helpers/types";
 
 export default function GroupInfo() {
     const { groupId } = useParams<{ groupId: string }>();
@@ -55,67 +56,6 @@ export default function GroupInfo() {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [deleteError, setDeleteError] = useState("");
 
-    // Redirect to login if not authenticated
-    useEffect(() => {
-        if (!authContext?.isAuthenticated && !authContext?.loading) {
-            console.error("Not authenticated, redirecting to login");
-            nav("/login");
-        }
-    }, [authContext, nav]);
-
-    // Fetch group data
-    useEffect(() => {
-        const accessToken = localStorage.getItem("access_token");
-        if (!accessToken) {
-            setGroupError("Authentication Error");
-            setLoadingGroup(false);
-            return;
-        }
-
-        fetch(`/api/groups/${groupId}`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        })
-            .then((response) => {
-                if (response.ok) return response.json();
-                else throw new Error("Failed to fetch group");
-            })
-            .then((data) => {
-                setGroup(data);
-                setLoadingGroup(false);
-                // Fetch creator details
-                return fetch("/api/user/details", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${accessToken}`,
-                    },
-                    body: JSON.stringify({ user_ids: [data.creator_id] }),
-                });
-            })
-            .then((response) => {
-                if (response.ok) return response.json();
-                else throw new Error("Failed to fetch user details");
-            })
-            .then((data) => {
-                setCreator(data[0]);
-            })
-            .catch((err) => {
-                console.error(err);
-                setGroupError(err.message);
-                setLoadingGroup(false);
-            });
-    }, [groupId]);
-
-    // Delay the display of the card loading spinner to avoid brief flickers
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            setDisplayLoadingCards(loadingCards);
-        }, 1000);
-        return () => clearTimeout(timeout);
-    }, [loadingCards]);
-
     const fetchCards = useCallback(() => {
         setLoadingCards(true);
         const accessToken = localStorage.getItem("access_token");
@@ -125,13 +65,9 @@ export default function GroupInfo() {
             return;
         }
 
-        fetch(`/api/groups/${groupId}/cards`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        })
+        axiosInstance.get(`/groups/${groupId}/cards`)
             .then((response) => {
-                if (response.ok) return response.json();
+                if (response.status === 200) return response.data;
                 else throw new Error("Failed to fetch cards");
             })
             .then((data) => {
@@ -145,13 +81,85 @@ export default function GroupInfo() {
             });
     }, [groupId]);
 
+    //
+    // USE EFFECTS
+    //
+
+    // Redirect to login if not authenticated
+    useEffect(() => {
+        if (!authContext?.isAuthenticated && !authContext?.loading) {
+            console.error("Not authenticated, redirecting to login");
+            nav("/login");
+        }
+    }, [authContext, nav]);
+
+    useEffect(() => {
+        fetchGroupAndCreator();
+    }, [groupId]);
+
+
+    // Delay the display of the card loading spinner to avoid brief flickers
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            setDisplayLoadingCards(loadingCards);
+        }, 1000);
+        return () => clearTimeout(timeout);
+    }, [loadingCards]);
+
     useEffect(() => {
         fetchCards();
     }, [fetchCards, groupId, authContext]);
 
+    //
+    // FUNCTIONS
+    //
+
+    const fetchGroupData = async (groupId: string) => {
+        const response = await axiosInstance.get(`/groups/${groupId}`);
+        if (response.status !== 200) {
+            throw new Error("Failed to fetch group");
+        }
+        return response.data;
+    };
+
+    const fetchUserDetails = async (userIds: string[]): Promise<UserIdMapping> => {
+        const response = await axiosInstance.post("/user/details", { user_ids: userIds });
+        if (response.status !== 200) {
+            throw new Error("Failed to fetch user details");
+        }
+        return response.data;
+    };
+
+    const fetchGroupAndCreator = async () => {
+        try {
+            // Fetch group details and update state
+            // This is definitely not undefined, but TypeScript doesn't know that
+            if (!groupId) {
+                throw new Error("Group ID is undefined");
+            }
+            const groupData = await fetchGroupData(groupId);
+            setGroup(groupData);
+
+            // Extract creator_id from groupData and fetch creator details
+            const creatorId = groupData.creator_id;
+            const userDetails = await fetchUserDetails([creatorId]);
+            console.debug("Creator data:", userDetails);
+
+            setCreator(userDetails[creatorId]);
+        } catch (err: any) {
+            console.error(err);
+            setGroupError(err.message);
+        } finally {
+            setLoadingGroup(false);
+        }
+    };
+
+    //
+    // HANDLERS
+    //
+
     const handleCreateCard = () => {
         setCreatingCard(true);
-        const accessToken = localStorage.getItem("access_token");
 
         if (!newQuestion.trim() || !newCorrectAnswer.trim()) {
             if (!newQuestion.trim()) {
@@ -163,26 +171,14 @@ export default function GroupInfo() {
             return;
         }
 
-        if (!accessToken) {
-            console.error("Authentication Error");
-            setCreatingCard(false);
-            return;
-        }
+        axiosInstance.post("/cards", {
+            question: newQuestion,
+            correct_answer: newCorrectAnswer,
+            group_id: groupId,
 
-        fetch("/api/cards", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                question: newQuestion,
-                correct_answer: newCorrectAnswer,
-                group_id: groupId,
-            }),
         })
             .then((response) => {
-                if (response.ok) return response.json();
+                if (response.status) return response.data;
                 else throw new Error("Failed to create card");
             })
             .then(() => {
@@ -225,21 +221,10 @@ export default function GroupInfo() {
         setOpenDeleteDialog(true);
     };
 
-    const confirmDeleteGroup = () => {
-        const accessToken = localStorage.getItem("access_token");
-        if (!accessToken) {
-            setDeleteError("Authentication Error");
-            return;
-        }
-
-        fetch(`/api/groups/${groupId}`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-        })
+    const handleConfirmDeleteGroup = () => {
+        axiosInstance.delete(`/groups/${groupId}`)
             .then((response) => {
-                if (response.ok) {
+                if (response.status === 200) {
                     nav("/dashboard");
                 } else {
                     throw new Error("Failed to delete group");
@@ -257,6 +242,10 @@ export default function GroupInfo() {
         editCard,
         fetchCards,
     };
+
+    if (!groupId) {
+        nav("/dashboard");
+    }
 
     return (
         <>
@@ -332,7 +321,7 @@ export default function GroupInfo() {
                 <DeleteGroupDialog
                     open={openDeleteDialog}
                     onClose={() => setOpenDeleteDialog(false)}
-                    onConfirm={confirmDeleteGroup}
+                    onConfirm={handleConfirmDeleteGroup}
                     error={deleteError}
                 />
             </Container>
