@@ -8,8 +8,7 @@
   - [x] The "Flashcard Quiz" header is not centered, and besides it should be on the left
   - [x] The flashcards themselves have a log of styling, which should be in the assets
 - [ ] The registration page has a lot of styling in it. Move that to the assets
-- The GroupInfo page is a mess. Clean it up
-    - [ ] The GroupCardsTable has a log of styling in it. Remove that
+- [x] The GroupInfo page is a mess. Clean it up
 
 ## Bulk imports
 

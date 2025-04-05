@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -85,7 +83,9 @@ export default function LoginPage() {
                 component="form"
                 onSubmit={handleSubmit}
                 noValidate
-                sx={{ mt: 1 }}
+                sx={{
+                    mt: 1, maxWidth: 500, width: "75%"
+                }}
             >
                 <TextField
                     margin="normal"
@@ -133,7 +133,7 @@ export default function LoginPage() {
                             </Grid> */}
                     <Grid>
                         <Link href="/register" variant="body2">
-                            {"Don't have an account? Sign Up"}
+                            Don't have an account? Sign Up
                         </Link>
                     </Grid>
                 </Grid>
