@@ -1,4 +1,4 @@
-*.json
+google_oauth2_creds.json
 
 # General
 .DS_Store
