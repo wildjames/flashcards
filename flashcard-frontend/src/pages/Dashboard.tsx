@@ -130,11 +130,7 @@ export default function Dashboard() {
                         <Grid container spacing={3}>
                             {groups.map((group: GroupData) => (
                                 <Grid
-                                    size={{
-                                        xs: 12,
-                                        md: 6,
-                                        lg: 3,
-                                    }}
+                                    size={{ xs: 12, md: 6, lg: 3 }}
                                     key={group.group_id}
                                 >
                                     <Card>
@@ -181,7 +177,7 @@ export default function Dashboard() {
                     variant="extended"
                     color="primary"
                     aria-label="flashcard"
-                    sx={{ position: "fixed", bottom: 16, right: "50%" }}
+                    sx={{ position: "fixed", bottom: 16, right: "50%", transform: "translateX(50%)" }}
                     onClick={() => nav("/flashcard")}
                 >
                     <BoltIcon sx={{ mr: 1 }} />
