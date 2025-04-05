@@ -15,7 +15,7 @@ This is a simple backend for serving the flashcard frontend with cards and data.
 - [ ] This needs to be served with a proper WSGI thing. Do that
 - [ ] Bulk importing needs to be implemented
   - [ ] Google sheets
-  - [ ] Bulk data from a request
+  - [x] Bulk data from a request
   - [ ] Confluence?
   - [ ] Perhaps given a page, use llm/nlp to parse out q&a? Some existing projects but they seem paid or rubbish so this may be hard
 
