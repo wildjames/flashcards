@@ -109,13 +109,24 @@ app.add_url_rule("/api/cards/flashcard", view_func=card_endpoints.get_random_car
 import routes.group_endpoints as group_endpoints
 
 app.add_url_rule("/api/groups", view_func=group_endpoints.create_group, methods=['POST'])
-app.add_url_rule("/api/groups/google-sheets", view_func=group_endpoints.create_group_from_google_sheet, methods=['POST'])
+
+# List all groups
 app.add_url_rule("/api/groups", view_func=group_endpoints.get_groups, methods=['GET'])
+
+# Get group
 app.add_url_rule("/api/groups/<uuid:group_id>", view_func=group_endpoints.get_group_info, methods=['GET'])
+# Update group
 app.add_url_rule("/api/groups/<uuid:group_id>", view_func=group_endpoints.update_group, methods=['PUT'])
+# Delete Group
 app.add_url_rule("/api/groups/<uuid:group_id>", view_func=group_endpoints.delete_group, methods=['DELETE'])
+
+# Search for groups
+app.add_url_rule("/api/groups/search", view_func=group_endpoints.search_groups, methods=['GET'])
 app.add_url_rule("/api/groups/<uuid:group_id>/join", view_func=group_endpoints.add_user_to_group, methods=['POST'])
 app.add_url_rule("/api/groups/<uuid:group_id>/cards", view_func=group_endpoints.get_group_cards, methods=['GET'])
+
+# WIP: Google sheets creation
+app.add_url_rule("/api/groups/google-sheets", view_func=group_endpoints.create_group_from_google_sheet, methods=['POST'])
 
 
 ### DEV ENDPOINTS ###

@@ -55,7 +55,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         // On mount, check authentication state
         checkAuth();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const login = (tokens: { access_token: string; refresh_token: string }) => {

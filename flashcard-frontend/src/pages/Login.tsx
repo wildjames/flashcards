@@ -112,6 +112,7 @@ export default function LoginPage() {
                     onChange={handleChange}
                 />
                 {error && (
+                    // TODO: This should be more informative
                     <Typography color="error" sx={{ mt: 2 }}>
                         {error}
                     </Typography>

@@ -43,9 +43,13 @@ export default function GroupDetails({ groupId }: GroupDetailsProps) {
                 const creatorId = groupData.creator_id;
                 const userDetails = await fetchUserDetails([creatorId]);
                 setCreator(userDetails[creatorId]);
-            } catch (err: any) {
+            } catch (err) {
                 console.error(err);
-                setError(err.message);
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError("An unknown error occurred");
+                }
             } finally {
                 setLoading(false);
             }

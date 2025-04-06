@@ -140,6 +140,28 @@ def get_group_info(group_id):
         'time_updated': group.time_updated
     }), 200
 
+# Search for group names (and IDs?)
+@jwt_required()
+def search_groups():
+    name = request.args.get("groupname")
+
+    groups = Group.query.filter_by(group_name=name)
+
+    groups_list = [{
+        'group_name': group.group_name,
+        'group_id': group.group_id,
+        'creator_id': group.creator_id,
+        'time_created': group.time_created,
+        'time_updated': group.time_updated,
+        # "subscribers": [subscriber.id for subscriber in group.subscribers]
+    } for group in groups]
+
+    if len(groups_list) == 0:
+        print("No group found")
+        return 204
+
+    return jsonify(groups_list), 200
+
 @jwt_required()
 def create_group_from_google_sheet():
     data = request.get_json()

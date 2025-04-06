@@ -11,6 +11,7 @@ import Register from "./pages/Register"
 import Dashboard from "./pages/Dashboard"
 import GroupInfo from "./pages/GroupInfo"
 import Flashcard from "./pages/Flashcard"
+import GroupSearchPage from "./pages/GroupSearch"
 
 function App() {
 
@@ -24,6 +25,7 @@ function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/groups/:groupId" element={<GroupInfo />} />
+                        <Route path="/groups/search" element={<GroupSearchPage />} />
                         <Route path="/flashcard" element={<Flashcard />} />
                     </Route>
                 </Routes>

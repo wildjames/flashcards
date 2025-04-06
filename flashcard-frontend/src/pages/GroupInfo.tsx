@@ -24,19 +24,11 @@ import DeleteGroupDialog from "../components/DeleteGroupDialog";
 
 export default function GroupInfo() {
     const { groupId } = useParams<{ groupId: string }>();
-    const authContext = useContext(AuthContext);
     const nav = useNavigate();
 
     // Local state only for controlling dialogs
     const [openBulkDialog, setOpenBulkDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-
-    // Redirect to login if not authenticated
-    useEffect(() => {
-        if (!authContext?.isAuthenticated && !authContext?.loading) {
-            nav("/login");
-        }
-    }, [authContext, nav]);
 
     // Redirect if groupId is missing
     if (!groupId) {

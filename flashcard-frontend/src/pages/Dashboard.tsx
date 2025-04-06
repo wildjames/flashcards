@@ -32,11 +32,13 @@ export default function Dashboard() {
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
     // For displaying user groups
     const [groups, setGroups] = useState<GroupData[]>([]);
     const [userIdMapping, setUserIdMapping] = useState<UserIdMapping>({});
+
     // For creating new groups
-    const [openDialog, setOpenDialog] = useState(false);
+    const [openCreateDialog, setOpenCreateDialog] = useState(false);
 
     // Redirect to login if not authenticated
     useEffect(() => {
@@ -160,13 +162,25 @@ export default function Dashboard() {
                     )}
                 </Box>
 
+                {/* Search for groups FAB */}
+                <Fab
+                    variant="extended"
+                    color="secondary"
+                    aria-label="search"
+                    sx={{ position: "fixed", bottom: 16, left: 16 }}
+                    onClick={() => nav("/groups/search")}
+                >
+                    <AddIcon sx={{ mr: 1 }} />
+                    Find Group
+                </Fab>
+
                 {/* Create Group FAB */}
                 <Fab
                     variant="extended"
-                    color="primary"
+                    color="secondary"
                     aria-label="add"
                     sx={{ position: "fixed", bottom: 16, right: 16 }}
-                    onClick={() => setOpenDialog(true)}
+                    onClick={() => setOpenCreateDialog(true)}
                 >
                     <AddIcon sx={{ mr: 1 }} />
                     Create Group
@@ -185,10 +199,10 @@ export default function Dashboard() {
                 </Fab>
             </Container>
 
-            {/* Dialog for creating a new group */}
+            {/* Dialogs */}
             <GroupCreationDialog
-                open={openDialog}
-                onClose={() => setOpenDialog(false)}
+                open={openCreateDialog}
+                onClose={() => setOpenCreateDialog(false)}
                 onGroupCreated={handleGroupCreated}
             />
         </>
