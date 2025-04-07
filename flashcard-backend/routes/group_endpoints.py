@@ -12,6 +12,10 @@ from database.db_types import Group, SheetSyncJob, User
 
 from scheduler import scheduler
 
+from logging import getLogger
+
+logger = getLogger()
+
 # Create Card Group Endpoint
 @jwt_required()
 def create_group():
@@ -107,6 +111,9 @@ def add_user_to_group(group_id):
 
     return jsonify({'message': 'User added to group'}), 200
 
+# TODO: Leave a group
+
+
 # Get cards in group
 @jwt_required()
 def get_group_cards(group_id):
@@ -143,9 +150,14 @@ def get_group_info(group_id):
 # Search for group names (and IDs?)
 @jwt_required()
 def search_groups():
-    name = request.args.get("groupname")
+    name = request.args.get("group_name")
+    if name is None:
+        return 400
+    
+    user_id = get_jwt_identity()
 
-    groups = Group.query.filter_by(group_name=name)
+    # Use ilike for case-insensitive partial matching
+    groups = Group.query.filter(Group.group_name.ilike(f"%{name}%")).all()
 
     groups_list = [{
         'group_name': group.group_name,
@@ -153,7 +165,8 @@ def search_groups():
         'creator_id': group.creator_id,
         'time_created': group.time_created,
         'time_updated': group.time_updated,
-        # "subscribers": [subscriber.id for subscriber in group.subscribers]
+        # TODO: I don't love this string casting. Is there a more official way to do this?
+        'subscribed': str(user_id) in [str(acc.id) for acc in group.subscribers],
     } for group in groups]
 
     if len(groups_list) == 0:

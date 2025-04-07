@@ -6,6 +6,10 @@ export interface GroupData {
     time_updated: Date;
 };
 
+export interface GroupSearchData extends GroupData {
+    subscribed: boolean;
+}
+
 export interface UserData {
     user_id: string;
     username: string;

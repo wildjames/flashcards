@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import {
     AppBar,
@@ -12,31 +12,64 @@ import {
     TableContainer,
     TableHead,
     TableRow,
-    CircularProgress
+    CircularProgress,
+    TableBody,
+    Paper,
+    Button
 } from "@mui/material";
 
 import DashboardButton from "../components/DashboardButton";
 import LogoutButton from "../components/LogoutButton";
 
+import { GroupSearchData, UserIdMapping } from "../helpers/types";
+import { fetchUserDetails, searchGroupData } from "../helpers/utils";
+
 
 export default function GroupSearchPage() {
-    const [groupName, setGroupName] = useState<string>("")
-    const [groups, setGroups] = useState<Array<string>>([])
+    const [searchForGroupName, setSearchForGroupName] = useState<string>("")
+    const [groups, setGroups] = useState<Array<GroupSearchData>>([])
+    const [userDataMapping, setUserDataMapping] = useState<UserIdMapping>()
     const [loading, setLoading] = useState<boolean>(false)
 
-    const handleSearchGroup = () => {
-        setTimeout(() => {
-            console.log("Searching for group", groupName)
-            if (groupName.length) {
-                setGroups([groupName])
+    const handleSearchGroup = async () => {
+        setLoading(true);
+
+        try {
+            console.log("Searching for group", searchForGroupName);
+            if (searchForGroupName.length) {
+                const groupData = await searchGroupData(searchForGroupName);
+                setGroups(groupData);
             } else {
-                console.log("Unsetting groups")
-                setGroups([])
+                console.log("Unsetting groups");
+                setGroups([]);
             }
-            setLoading(false)
-        }, 2000)
-        setLoading(true)
-    }
+        } catch (err) {
+            console.error(err);
+        }
+
+        // I add a short delay here to give the user mapping a chance to catch up, without making the screen flicker
+        setTimeout(async () => {
+            setLoading(false);
+        }, 500);
+    };
+
+    // Update the userDataMapping
+    useEffect(() => {
+        const fetchUserMapping = async () => {
+            if (groups.length > 0) {
+                const userIds = new Set(groups.map((group) => group.creator_id));
+                try {
+                    console.log("Getting user data");
+                    const userData = await fetchUserDetails(userIds);
+                    setUserDataMapping(userData);
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        };
+
+        fetchUserMapping();
+    }, [groups]);
 
     // Allow Enter key to create a card
     const handleSearchEnter = (e: React.KeyboardEvent) => {
@@ -44,6 +77,16 @@ export default function GroupSearchPage() {
             handleSearchGroup();
         }
     };
+
+    function handleJoinGroup(groupId: string, subscribed: boolean) {
+        return () => {
+            if (subscribed) {
+                console.log("Leaving group", groupId)
+            } else {
+                console.log("Joining group", groupId)
+            }
+        }
+    }
 
     return (
         <>
@@ -71,8 +114,8 @@ export default function GroupSearchPage() {
                     type="text"
                     fullWidth
                     variant="standard"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
+                    value={searchForGroupName}
+                    onChange={(e) => setSearchForGroupName(e.target.value)}
                     onKeyDown={handleSearchEnter}
                 />
             </Container>
@@ -87,21 +130,42 @@ export default function GroupSearchPage() {
                             Search Results
                         </Typography>
 
-                        <TableContainer>
+                        <TableContainer component={Paper}>
                             <Table>
                                 <TableHead>
                                     <TableRow>
-                                        <TableCell>
+                                        <TableCell sx={{ fontWeight: "bold" }}>
                                             Group Name
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell sx={{ fontWeight: "bold" }}>
                                             Group Creator
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell sx={{ fontWeight: "bold" }}>
                                             Group ID
                                         </TableCell>
+                                        <TableCell />
                                     </TableRow>
                                 </TableHead>
+                                <TableBody>
+                                    {groups.map((group) => (
+                                        <TableRow>
+                                            <TableCell>
+                                                {group.group_name}
+                                            </TableCell>
+                                            <TableCell>
+                                                {userDataMapping ? userDataMapping[group.creator_id].username : "Unknown"}
+                                            </TableCell>
+                                            <TableCell>
+                                                {group.group_id}
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button onClick={handleJoinGroup(group.group_id, group.subscribed)}>
+                                                    { group.subscribed ? "Leave" : "Join" }
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
                             </Table>
                         </TableContainer>
                     </Box>

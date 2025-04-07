@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import {
@@ -11,8 +11,6 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-import { AuthContext } from "../context/AuthContext";
 
 import LogoutButton from "../components/LogoutButton";
 import DashboardButton from "../components/DashboardButton";

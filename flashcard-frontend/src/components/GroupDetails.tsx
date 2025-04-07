@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 
 import { Box, CircularProgress, Typography } from "@mui/material";
 
-import axiosInstance from "../helpers/axiosInstance";
-import { GroupData, UserData, UserIdMapping } from "../helpers/types";
+import { GroupData, UserData } from "../helpers/types";
+import { fetchGroupData, fetchUserDetails } from "../helpers/utils";
 
 interface GroupDetailsProps {
     groupId: string;
@@ -14,22 +14,6 @@ export default function GroupDetails({ groupId }: GroupDetailsProps) {
     const [group, setGroup] = useState<GroupData | null>(null);
     const [creator, setCreator] = useState<UserData | null>(null);
     const [error, setError] = useState("");
-
-    const fetchGroupData = async (groupId: string) => {
-        const response = await axiosInstance.get(`/groups/${groupId}`);
-        if (response.status !== 200) {
-            throw new Error("Failed to fetch group");
-        }
-        return response.data;
-    };
-
-    const fetchUserDetails = async (userIds: string[]): Promise<UserIdMapping> => {
-        const response = await axiosInstance.post("/user/details", { user_ids: userIds });
-        if (response.status !== 200) {
-            throw new Error("Failed to fetch user details");
-        }
-        return response.data;
-    };
 
     useEffect(() => {
         const fetchData = async () => {
