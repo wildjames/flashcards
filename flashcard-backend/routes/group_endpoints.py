@@ -135,13 +135,17 @@ def get_group_cards(group_id):
     if not group:
         return jsonify({'message': 'Group not found'}), 404
 
+    user_id = get_jwt_identity()
+    user_uuid = uuid.UUID(user_id)
+
     cards = group.cards
     cards_list = [{
         'card_id': card.card_id,
         'question': card.question,
         'correct_answer': card.correct_answer,
         'time_created': card.time_created,
-        'time_updated': card.time_updated
+        'time_updated': card.time_updated,
+        'subscribed': user_uuid in [acc.id for acc in group.subscribers],
     } for card in cards]
 
     return jsonify(cards_list), 200
@@ -153,12 +157,16 @@ def get_group_info(group_id):
     if not group:
         return jsonify({'message': 'Group not found'}), 404
 
+    user_id = get_jwt_identity()
+    user_uuid = uuid.UUID(user_id)
+
     return jsonify({
         'group_name': group.group_name,
         'group_id': group.group_id,
         'creator_id': group.creator_id,
         'time_created': group.time_created,
-        'time_updated': group.time_updated
+        'time_updated': group.time_updated,
+        'subscribed': user_uuid in [acc.id for acc in group.subscribers],
     }), 200
 
 # Search for group names (and IDs?)

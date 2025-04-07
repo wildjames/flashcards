@@ -4,6 +4,7 @@ export interface GroupData {
     creator_id: string;
     time_created: Date;
     time_updated: Date;
+    subscribed: boolean;
 };
 
 export interface GroupSearchData extends GroupData {

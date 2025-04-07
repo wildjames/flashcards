@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+
 import {
     Container,
     Box,
@@ -17,12 +19,15 @@ import {
 import { GroupSearchData, UserIdMapping } from "../helpers/types";
 import { fetchUserDetails, joinGroup, leaveGroup, searchGroupData } from "../helpers/utils";
 
+
 interface GroupSearchProps {
     searchString: string;
     refreshData: boolean;
 }
 
 export default function GroupSearch({ searchString, refreshData }: GroupSearchProps) {
+    const nav = useNavigate();
+
     const [groups, setGroups] = useState<Array<GroupSearchData>>([]);
     const [userDataMapping, setUserDataMapping] = useState<UserIdMapping>();
     const [loading, setLoading] = useState<boolean>(false);
@@ -129,16 +134,35 @@ export default function GroupSearch({ searchString, refreshData }: GroupSearchPr
                                 </TableHead>
                                 <TableBody>
                                     {groups.map((group) => (
-                                        <TableRow key={group.group_id}>
-                                            <TableCell>{group.group_name}</TableCell>
-                                            <TableCell>
+                                        <TableRow
+                                            key={group.group_id}
+                                            hover
+                                        // This winds up being a bit tricky on mobile, and also the button appears below it.
+                                        // onClick={() => { nav(`/groups/${group.group_id}`) }}
+                                        // sx={{ cursor: "pointer" }}
+                                        >
+                                            <TableCell
+                                                onClick={() => { nav(`/groups/${group.group_id}`) }}
+                                                sx={{ cursor: "pointer" }}
+                                            >
+                                                {group.group_name}
+                                            </TableCell>
+                                            <TableCell
+                                                onClick={() => { nav(`/groups/${group.group_id}`) }}
+                                                sx={{ cursor: "pointer" }}
+                                            >
                                                 {userDataMapping
                                                     ? userDataMapping[group.creator_id]?.username
                                                     : "Unknown"}
                                             </TableCell>
-                                            <TableCell>{group.group_id}</TableCell>
+                                            <TableCell
+                                                onClick={() => { nav(`/groups/${group.group_id}`) }}
+                                                sx={{ cursor: "pointer" }}
+                                            >{group.group_id}</TableCell>
                                             <TableCell>
                                                 <Button
+                                                    sx={{}}
+                                                    fullWidth
                                                     onClick={handleGroupInclusionButton(group.group_id, group.subscribed)}
                                                 >
                                                     {group.subscribed ? "Leave" : "Join"}
