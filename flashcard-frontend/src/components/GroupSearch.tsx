@@ -15,13 +15,14 @@ import {
 } from "@mui/material";
 
 import { GroupSearchData, UserIdMapping } from "../helpers/types";
-import { fetchUserDetails, searchGroupData } from "../helpers/utils";
+import { fetchUserDetails, joinGroup, leaveGroup, searchGroupData } from "../helpers/utils";
 
 interface GroupSearchProps {
     searchString: string;
+    refreshData: boolean;
 }
 
-export default function GroupSearch({ searchString }: GroupSearchProps) {
+export default function GroupSearch({ searchString, refreshData }: GroupSearchProps) {
     const [groups, setGroups] = useState<Array<GroupSearchData>>([]);
     const [userDataMapping, setUserDataMapping] = useState<UserIdMapping>();
     const [loading, setLoading] = useState<boolean>(false);
@@ -41,14 +42,14 @@ export default function GroupSearch({ searchString }: GroupSearchProps) {
             } else {
                 setGroups([]);
             }
-            // Delay to smooth out the UI
+            // delay to smooth out the UI - the usernames take a second request to fetch.
             setTimeout(() => {
                 setLoading(false);
             }, 500);
         };
 
         runSearch();
-    }, [searchString]);
+    }, [searchString, refreshData]);
 
     // Update the user data mapping when group results change
     useEffect(() => {
@@ -70,11 +71,24 @@ export default function GroupSearch({ searchString }: GroupSearchProps) {
         fetchUserMapping();
     }, [groups]);
 
-    const handleJoinGroup = (groupId: string, subscribed: boolean) => () => {
+    const handleGroupInclusionButton = (groupId: string, subscribed: boolean) => async () => {
         if (subscribed) {
             console.log("Leaving group", groupId);
+            const message = await leaveGroup(groupId)
+            console.log(message)
         } else {
             console.log("Joining group", groupId);
+            const message = await joinGroup(groupId)
+            console.log(message)
+        }
+
+        // Refresh the group table - dont set a loading spinner
+        try {
+            console.log("Searching for group", searchString);
+            const groupData = await searchGroupData(searchString);
+            setGroups(groupData);
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -125,7 +139,7 @@ export default function GroupSearch({ searchString }: GroupSearchProps) {
                                             <TableCell>{group.group_id}</TableCell>
                                             <TableCell>
                                                 <Button
-                                                    onClick={handleJoinGroup(group.group_id, group.subscribed)}
+                                                    onClick={handleGroupInclusionButton(group.group_id, group.subscribed)}
                                                 >
                                                     {group.subscribed ? "Leave" : "Join"}
                                                 </Button>

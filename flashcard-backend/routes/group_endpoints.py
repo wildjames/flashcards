@@ -111,8 +111,22 @@ def add_user_to_group(group_id):
 
     return jsonify({'message': 'User added to group'}), 200
 
-# TODO: Leave a group
+# Leave a group
+@jwt_required()
+def remove_user_from_group(group_id):
+    user_id = get_jwt_identity()
+    user_uuid = uuid.UUID(user_id)
 
+    group = Group.query.filter_by(group_id=group_id).first()
+    if not group:
+        return jsonify({"message": "Group not found"}), 404
+
+    user = User.query.filter_by(id=user_uuid).first()
+    group.subscribers.remove(user)
+
+    db.session.commit()
+
+    return jsonify({"message": "User removed from group"}), 200
 
 # Get cards in group
 @jwt_required()
@@ -153,8 +167,9 @@ def search_groups():
     name = request.args.get("group_name")
     if name is None:
         return 400
-    
+
     user_id = get_jwt_identity()
+    user_uuid = uuid.UUID(user_id)
 
     # Use ilike for case-insensitive partial matching
     groups = Group.query.filter(Group.group_name.ilike(f"%{name}%")).all()
@@ -165,8 +180,7 @@ def search_groups():
         'creator_id': group.creator_id,
         'time_created': group.time_created,
         'time_updated': group.time_updated,
-        # TODO: I don't love this string casting. Is there a more official way to do this?
-        'subscribed': str(user_id) in [str(acc.id) for acc in group.subscribers],
+        'subscribed': user_uuid in [acc.id for acc in group.subscribers],
     } for group in groups]
 
     if len(groups_list) == 0:

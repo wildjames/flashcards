@@ -1,4 +1,5 @@
 import axiosInstance from "./axiosInstance";
+
 import { GroupData, GroupSearchData, UserIdMapping } from "./types";
 
 
@@ -27,4 +28,20 @@ export const searchGroupData = async (groupName: string): Promise<Array<GroupSea
         throw new Error("Failed to search for group");
     }
     return response.data;
+}
+
+export const joinGroup = async (group_id: string): Promise<string> => {
+    const response = await axiosInstance.post(`/groups/${group_id}/join`);
+    if (response.status !== 200) {
+        throw new Error("Failed to join group")
+    }
+    return response.data.message
+}
+
+export const leaveGroup = async (group_id: string): Promise<string> => {
+    const response = await axiosInstance.post(`/groups/${group_id}/leave`);
+    if (response.status !== 200) {
+        throw new Error("Failed to leave group")
+    }
+    return response.data.message
 }

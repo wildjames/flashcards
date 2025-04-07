@@ -122,7 +122,10 @@ app.add_url_rule("/api/groups/<uuid:group_id>", view_func=group_endpoints.delete
 
 # Search for groups
 app.add_url_rule("/api/groups/search", view_func=group_endpoints.search_groups, methods=['GET'])
+
+# Join or Leave group
 app.add_url_rule("/api/groups/<uuid:group_id>/join", view_func=group_endpoints.add_user_to_group, methods=['POST'])
+app.add_url_rule("/api/groups/<uuid:group_id>/leave", view_func=group_endpoints.remove_user_from_group, methods=['POST'])
 app.add_url_rule("/api/groups/<uuid:group_id>/cards", view_func=group_endpoints.get_group_cards, methods=['GET'])
 
 # WIP: Google sheets creation
