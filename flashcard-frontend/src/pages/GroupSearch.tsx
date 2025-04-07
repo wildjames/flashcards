@@ -130,7 +130,7 @@ export default function GroupSearchPage() {
                             Search Results
                         </Typography>
 
-                        <TableContainer component={Paper}>
+                        <TableContainer component={Paper} sx={{ maxWidth: "lg" }}>
                             <Table>
                                 <TableHead>
                                     <TableRow>
@@ -160,7 +160,7 @@ export default function GroupSearchPage() {
                                             </TableCell>
                                             <TableCell>
                                                 <Button onClick={handleJoinGroup(group.group_id, group.subscribed)}>
-                                                    { group.subscribed ? "Leave" : "Join" }
+                                                    {group.subscribed ? "Leave" : "Join"}
                                                 </Button>
                                             </TableCell>
                                         </TableRow>
