@@ -15,8 +15,8 @@
 
 ## MVP features
 
-- [ ] Search for and join groups
-- [ ] Leave groups without deleting them!
+- [x] Search for and join groups
+- [x] Leave groups without deleting them!
 
 ## Bulk imports
 

@@ -12,12 +12,12 @@ This is dockerised, and hosted [here](https://flashcards.wildjames.com). Account
 
 ## TODO
 
-- [ ] Add people to groups
+- [x] Add people to groups
   - [x] Backend
-  - [ ] Frontend
-- [ ] Remove people from groups
+  - [x] Frontend
+- [x] Remove people from groups
 - [x] Basic Bulk imports
   - [ ] Google Sheets imports \[WIP\]
   - [ ] Webpage imports?
   - [ ] Confluence imports?
-- [ ] Extension
+- [ ] Browser Extension
